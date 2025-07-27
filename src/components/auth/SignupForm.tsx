@@ -63,7 +63,7 @@ const SignupForm = ({ onSuccess, onSwitchToLogin }: SignupFormProps) => {
       if (success) {
         toast({
           title: "Account Created!",
-          description: "Please check your email to verify your account",
+          description: "WelCome To Gamer Place!!",
         });
         onSuccess();
       } else {

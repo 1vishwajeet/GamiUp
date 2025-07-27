@@ -19,6 +19,7 @@ const SignupForm = ({ onSuccess, onSwitchToLogin }: SignupFormProps) => {
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [is18Confirmed, setIs18Confirmed] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { signup } = useAuth();
@@ -26,7 +27,17 @@ const SignupForm = ({ onSuccess, onSwitchToLogin }: SignupFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    if (!is18Confirmed) {
+      toast({
+        title: "Age Confirmation Required",
+        description: "You must confirm that you're 18+ to sign up.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+
     if (password !== confirmPassword) {
       toast({
         title: "Password Mismatch",
@@ -189,6 +200,21 @@ const SignupForm = ({ onSuccess, onSwitchToLogin }: SignupFormProps) => {
             required
           />
         </div>
+
+        <div className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            id="ageConfirm"
+            checked={is18Confirmed}
+            onChange={(e) => setIs18Confirmed(e.target.checked)}
+            required
+            className="accent-purple-500 w-4 h-4 accent-color: #8b5cf6"
+          />
+          <label htmlFor="ageConfirm" className="text-sm text-muted-foreground">
+            I confirm that I am 18 years old or above and agree to follow the rules of this platform.
+          </label>
+        </div>
+
 
         <Button
           type="submit"

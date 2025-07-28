@@ -48,7 +48,7 @@ const HeroSection = () => {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="text-5xl md:text-7xl font-gaming font-black mb-6 bg-gradient-to-r from-gaming-purple to-gaming-cyan bg-clip-text text-transparent leading-tight"
         >
-          We don’t gamble. We GamiUp.
+          We don’t gamble. We GamiZN.
         </motion.h1>
 
         {/* Subtitle */}

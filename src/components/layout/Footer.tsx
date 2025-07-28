@@ -15,7 +15,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="relative py-20 overflow-hidden">
+    <footer className="relative py-10 overflow-hidden">
       {/* Background Effects */}
       <div className="absolute inset-0 bg-gradient-to-br from-gaming-purple/10 via-gaming-blue/5 to-gaming-cyan/10" />
 
@@ -25,14 +25,16 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           {/* Brand */}
           <div className="space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-gaming-purple to-gaming-blue rounded-xl flex items-center justify-center shadow-lg shadow-gaming-purple/25">
-                <Trophy className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-2xl font-gaming font-black bg-gradient-to-r from-gaming-cyan to-gaming-blue bg-clip-text text-transparent">
-                GameArena
-              </span>
-            </div>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              className="cursor-pointer relative z-10"
+            >
+              <img
+                src="/lovable-uploads/2.png"
+                alt="GameUp Logo"
+                className="h-10 sm:h-16 object-contain"
+              />
+            </motion.div>
             <p className="text-muted-foreground leading-relaxed">
               The ultimate esports challenge platform. Compete, win, and dominate in your favorite mobile games.
             </p>
@@ -80,10 +82,46 @@ const Footer = () => {
           </div>
         </div>
 
+        {/* Social Icons */}
+        <div className="w-full flex justify-center mt-10 mb-0 gap-10">
+          {/* Reddit */}
+          <a
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-center text-white hover:text-red-500 transition-transform transform hover:scale-110 hover:drop-shadow-glow"
+          >
+            <FaReddit className="text-4xl" />
+            <span className="mt-1 text-sm font-medium">Reddit</span>
+          </a>
+
+          {/* Discord */}
+          <a
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-center text-white hover:text-indigo-400 transition-transform transform hover:scale-110 hover:drop-shadow-glow"
+          >
+            <FaDiscord className="text-4xl" />
+            <span className="mt-1 text-sm font-medium">Discord</span>
+          </a>
+
+          {/* Twitch */}
+          <a
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-center text-white hover:text-purple-500 transition-transform transform hover:scale-110 hover:drop-shadow-glow"
+          >
+            <FaTwitch className="text-4xl" />
+            <span className="mt-1 text-sm font-medium">Twitch</span>
+          </a>
+        </div>
+
         {/* Bottom Section */}
-        <div className="border-t border-white/10 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="border-t border-white/10 mt-5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-muted-foreground">
-            © 2025 GameUp. All rights reserved.
+            © 2025 GameZN. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm">
             <a href="#" className="text-muted-foreground hover:text-gaming-cyan transition-colors">Terms of Service</a>
@@ -92,45 +130,6 @@ const Footer = () => {
             <a href="#" className="text-muted-foreground hover:text-gaming-cyan transition-colors">Community Guidelines</a>
           </div>
         </div>
-
-       {/* Social Icons */}
-<div className="w-full flex justify-center mt-1 gap-8">
-  {/* Reddit */}
-  <a
-    href="#"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="flex flex-col items-center text-white hover:text-red-500 transition-transform transform hover:scale-110 hover:drop-shadow-glow"
-  >
-    <FaReddit className="text-4xl" />
-    <span className="mt-1 text-sm font-medium">Reddit</span>
-  </a>
-
-  {/* Discord */}
-  <a
-    href="#"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="flex flex-col items-center text-white hover:text-indigo-400 transition-transform transform hover:scale-110 hover:drop-shadow-glow"
-  >
-    <FaDiscord className="text-4xl" />
-    <span className="mt-1 text-sm font-medium">Discord</span>
-  </a>
-
-  {/* Twitch */}
-  <a
-    href="#"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="flex flex-col items-center text-white hover:text-purple-500 transition-transform transform hover:scale-110 hover:drop-shadow-glow"
-  >
-    <FaTwitch className="text-4xl" />
-    <span className="mt-1 text-sm font-medium">Twitch</span>
-  </a>
-</div>
-
-
-
       </div>
     </footer>
   );

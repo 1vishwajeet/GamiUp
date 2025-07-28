@@ -1,33 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GamiZN - Ultimate Esports Challenge Platform</title>
-    <meta name="description" content="GamiZN - Ultimate Esports Challenge Platform" />
-    <meta name="author" content="GameZN" />
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
-    <link rel="icon" type="image/png" href="public\lovable-uploads\1.png" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GamiZN - Ultimate Esports Challenge Platform</title>
+  <meta name="description" content="GamiZN - Ultimate Esports Challenge Platform" />
+  <meta name="author" content="GameZN" />
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
-    
-    <!-- Gaming Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Audiowide&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="public\lovable-uploads\1.png" />
 
-    <meta property="og:title" content="GamiZN" />
-    <meta property="og:description" content="Contest Gaming Platform" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="#" />
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="GamiZN" />
-    <meta name="twitter:image" content="#" />
-  </head>
+  <!-- Gaming Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Audiowide&display=swap"
+    rel="stylesheet">
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <meta property="og:title" content="GamiZN" />
+  <meta property="og:description" content="Contest Gaming Platform" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="#" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="GamiZN" />
+  <meta name="twitter:image" content="#" />
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+  <script>
+    // Disable Right Click
+    document.addEventListener('contextmenu', e => e.preventDefault());
+
+    // Disable F12, Ctrl+Shift+I/J/C/U, and Ctrl+U
+    document.addEventListener('keydown', e => {
+      if (
+        e.key === 'F12' ||
+        (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key)) ||
+        (e.ctrlKey && e.key === 'U')
+      ) {
+        e.preventDefault();
+      }
+    });
+  </script>
+
+</body>
+
 </html>

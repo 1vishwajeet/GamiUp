@@ -2,6 +2,9 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Gamepad2, Play, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Player } from '@lottiefiles/react-lottie-player';
+
+
 
 const HeroSection = () => {
   const navigate = useNavigate();
@@ -26,20 +29,21 @@ const HeroSection = () => {
 
       {/* Content */}
       <div className="relative z-20 text-center px-4 max-w-6xl mx-auto">
-        {/* Hero Icon */}
         <motion.div
           initial={{ scale: 0, rotate: -180 }}
           animate={{ scale: 1, rotate: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="mb-8 flex justify-center"
         >
-          <img
-            src="/lovable-uploads/1.png"
-            alt="Hero Icon"
-            className="w-[150px] h-[150px] object-contain hover:scale-105"
+          {/* Replacing image with Lottie Player */}
+          <Player
+            autoplay
+            loop
+            src="https://lottie.host/96d4613a-0b90-475c-bd1b-560dfb8ecdec/veKmRLouuh.json"
+            style={{ height: '200px', width: '200px' }}
           />
-
         </motion.div>
+
 
         {/* Main Title */}
         <motion.h1
@@ -105,7 +109,6 @@ const HeroSection = () => {
           transition={{ duration: 0.8, delay: 1.0 }}
           className="mt-16"
         >
-          <p className="text-muted-foreground mb-6">Trusted by thousands of gamers</p>
           <div className="flex flex-col md:flex-row justify-center items-center gap-8 text-sm">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-gaming-green rounded-full" />

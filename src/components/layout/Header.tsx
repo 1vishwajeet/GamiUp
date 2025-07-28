@@ -9,7 +9,7 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { name: "Home", href: "/#hero" },
+    { name: "Home", href: "/" },
     { name: "How it Works", href: "/#how-it-works" },
     { name: "Challenges", href: "/#challenges" },
     { name: "Leaderboard", href: "/#leaderboard" },

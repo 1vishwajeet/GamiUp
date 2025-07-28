@@ -155,7 +155,7 @@ const SignupForm = ({ onSuccess, onSwitchToLogin }: SignupFormProps) => {
             type="tel"
             value={whatsappNumber}
             onChange={(e) => setWhatsappNumber(e.target.value)}
-            placeholder="+91 9876543210"
+            placeholder="+91 000XX000XX"
             required
           />
           <p className="text-xs text-muted-foreground">Include country code (e.g., +91)</p>

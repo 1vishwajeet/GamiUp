@@ -230,7 +230,7 @@ export const useAdminData = () => {
         rank: index + 1, // Simple ranking for now
         kills: submission.score || 0,
         screenshotProof: submission.result_screenshot,
-        additionalNotes: 'Winner submission verified',
+        additionalNotes: submission.additional_notes || null,
         submissionDateTime: submission.joined_at,
         status: submission.prize_amount ? 'Approved' : 'Pending',
         prizeAmount: submission.prize_amount || submission.first_prize || 0,

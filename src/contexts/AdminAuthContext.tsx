@@ -50,42 +50,11 @@ export const AdminAuthProvider = ({ children }: AdminAuthProviderProps) => {
   };
 
   useEffect(() => {
-    // Clear any existing admin auth state on initialization
-    clearAdminSession();
-
-    // Clear admin session on page visibility change (tab switch/blur)
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        clearAdminSession();
-        supabase.auth.signOut();
-      }
-    };
-
-    // Clear admin session before page unload/reload
-    const handleBeforeUnload = () => {
-      clearAdminSession();
-      supabase.auth.signOut();
-    };
-
-    // Clear session when navigating away from admin page
-    const handlePopState = () => {
-      if (window.location.pathname !== '/admin') {
-        clearAdminSession();
-        supabase.auth.signOut();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('popstate', handlePopState);
-
     // Check session after setting up listeners
     checkAdminSession();
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('popstate', handlePopState);
+      // Only clear admin session, not regular user session
       clearAdminSession();
     };
   }, []);

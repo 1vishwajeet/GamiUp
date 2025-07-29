@@ -64,36 +64,6 @@ const WinnerVerification = () => {
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Approved Winners</p>
-                {loading ? (
-                  <Skeleton className="h-9 w-8" />
-                ) : (
-                  <p className="text-3xl font-gaming font-bold text-green-500">{approvedCount}</p>
-                )}
-              </div>
-              <CheckCircle className="w-8 h-8 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Prize Money Approved</p>
-                {loading ? (
-                  <Skeleton className="h-9 w-20" />
-                ) : (
-                  <p className="text-3xl font-gaming font-bold text-purple-500">₹{totalPrizeApproved.toLocaleString()}</p>
-                )}
-              </div>
-              <Award className="w-8 h-8 text-purple-500" />
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Search & Header */}
@@ -186,104 +156,118 @@ const WinnerVerification = () => {
                     <div className="flex items-center gap-2">
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             size="sm"
                             onClick={() => setSelectedSubmission(submission)}
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-2xl">
-                          <DialogHeader>
-                            <DialogTitle>Winner Submission Details</DialogTitle>
-                          </DialogHeader>
-                          {selectedSubmission && (
-                            <div className="space-y-6">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <p className="text-sm text-muted-foreground">User Name</p>
-                                  <p className="font-medium">{selectedSubmission.userName}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm text-muted-foreground">User ID</p>
-                                  <p className="font-mono">{selectedSubmission.userId}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm text-muted-foreground">Contest</p>
-                                  <p>{selectedSubmission.contestName}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm text-muted-foreground">Rank</p>
-                                  <p className="font-bold">#{selectedSubmission.rank}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm text-muted-foreground">Number of Kills</p>
-                                  <p>{selectedSubmission.kills}</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm text-muted-foreground">Prize Amount</p>
-                                  <p className="font-gaming font-bold text-green-500">
-                                    ₹{selectedSubmission.prizeAmount.toLocaleString()}
-                                  </p>
+                        <DialogContent className="w-[95vw] max-w-4xl h-[85vh] max-h-[700px] p-0 overflow-hidden flex flex-col">
+                          <div className="flex flex-col h-full max-h-full">
+                            <DialogHeader className="flex-shrink-0 p-4 sm:p-6 border-b">
+                              <DialogTitle className="font-gaming">Winner Submission Details</DialogTitle>
+                            </DialogHeader>
+
+                            {selectedSubmission && (
+                              <div className="flex-1 overflow-y-auto p-4 sm:p-6 min-h-0">
+                                <div className="space-y-6">
+                                  {/* Basic Details Grid */}
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                      <p className="text-sm text-muted-foreground">User Name</p>
+                                      <p className="font-medium break-words">{selectedSubmission.userName}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm text-muted-foreground">User ID</p>
+                                      <p className="font-mono text-xs sm:text-sm break-all">{selectedSubmission.userId}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm text-muted-foreground">Contest</p>
+                                      <p className="break-words">{selectedSubmission.contestName}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm text-muted-foreground">Rank</p>
+                                      <p className="font-bold">#{selectedSubmission.rank}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm text-muted-foreground">Number of Kills</p>
+                                      <p>{selectedSubmission.kills}</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-sm text-muted-foreground">Prize Amount</p>
+                                      <p className="font-gaming font-bold text-green-500">
+                                        ₹{selectedSubmission.prizeAmount.toLocaleString()}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  {/* Screenshot Section */}
+                                  <div>
+                                    <p className="text-sm text-muted-foreground mb-3">Screenshot Proof</p>
+                                    <div className="flex justify-center">
+                                      <img
+                                        src={selectedSubmission.screenshotProof}
+                                        alt="Winner proof screenshot"
+                                        className="max-w-full max-h-[250px] sm:max-h-[350px] object-contain rounded-lg border border-border"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Additional Notes */}
+                                  {selectedSubmission.additionalNotes && (
+                                    <div>
+                                      <p className="text-sm text-muted-foreground mb-3">Additional Notes</p>
+                                      <Textarea
+                                        value={selectedSubmission.additionalNotes}
+                                        readOnly
+                                        className="min-h-16 max-h-24 resize-none"
+                                      />
+                                    </div>
+                                  )}
                                 </div>
                               </div>
+                            )}
 
-                              <div>
-                                <p className="text-sm text-muted-foreground mb-2">Screenshot Proof</p>
-                                <img 
-                                  src={selectedSubmission.screenshotProof} 
-                                  alt="Winner proof screenshot"
-                                  className="w-full max-w-md rounded-lg border border-border"
-                                />
-                              </div>
-
-                              {selectedSubmission.additionalNotes && (
-                                <div>
-                                  <p className="text-sm text-muted-foreground mb-2">Additional Notes</p>
-                                  <Textarea 
-                                    value={selectedSubmission.additionalNotes} 
-                                    readOnly 
-                                    className="min-h-20"
-                                  />
-                                </div>
-                              )}
-
-                              {selectedSubmission.status === "Pending" && (
-                                <div className="flex gap-2 pt-4">
-                                  <Button 
+                            {/* Action Buttons - Always visible at bottom */}
+                            {selectedSubmission?.status === "Pending" && (
+                              <div className="flex-shrink-0 p-4 sm:p-6 border-t bg-background">
+                                <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
+                                  <Button
                                     onClick={() => handleApprove(selectedSubmission.id)}
-                                    className="bg-green-500 hover:bg-green-600"
+                                    className="w-full sm:w-auto bg-green-500 hover:bg-green-600"
                                   >
                                     <CheckCircle className="w-4 h-4 mr-2" />
                                     Approve
                                   </Button>
-                                  <Button 
+                                  <Button
                                     onClick={() => handleReject(selectedSubmission.id)}
                                     variant="destructive"
+                                    className="w-full sm:w-auto"
                                   >
                                     <XCircle className="w-4 h-4 mr-2" />
                                     Reject
                                   </Button>
                                 </div>
-                              )}
-                            </div>
-                          )}
+                              </div>
+                            )}
+                          </div>
                         </DialogContent>
                       </Dialog>
 
                       {submission.status === "Pending" && (
                         <>
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             size="sm"
                             className="text-green-500 hover:text-green-600"
                             onClick={() => handleApprove(submission.id)}
                           >
                             <CheckCircle className="w-4 h-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             size="sm"
                             className="text-red-500 hover:text-red-600"
                             onClick={() => handleReject(submission.id)}

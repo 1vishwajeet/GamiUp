@@ -89,6 +89,7 @@ const UploadResultsSection = () => {
         .update({
           score: parseInt(kills),
           result_screenshot: screenshotUrl,
+          additional_notes: notes.trim() || null,
           is_winner: true // Mark as potential winner for verification
         })
         .eq('id', participantData.id);

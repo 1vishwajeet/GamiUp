@@ -57,14 +57,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    // Clear any existing auth state on initialization
-    cleanupAuthState();
-
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_OUT' || !session) {
-          cleanupAuthState();
+          setUser(null);
+          setUserProfile(null);
+          setSession(null);
           setLoading(false);
           return;
         }
@@ -73,9 +72,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Store session info in sessionStorage for current tab only
-          sessionStorage.setItem('user-session-active', 'true');
-          
           // Fetch user profile after authentication
           setTimeout(() => {
             fetchUserProfile(session.user.id);
@@ -86,38 +82,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    // Clear user session on page visibility change (tab switch/blur)
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        cleanupAuthState();
-        supabase.auth.signOut();
+    // Check for existing session on initialization
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setSession(session);
+        setUser(session.user);
+        setTimeout(() => {
+          fetchUserProfile(session.user.id);
+        }, 0);
       }
-    };
-
-    // Clear user session before page unload/reload
-    const handleBeforeUnload = () => {
-      cleanupAuthState();
-      supabase.auth.signOut();
-    };
-
-    // Clear session when navigating away from gamer-place
-    const handlePopState = () => {
-      if (window.location.pathname !== '/gamer-place') {
-        cleanupAuthState();
-        supabase.auth.signOut();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('popstate', handlePopState);
+      setLoading(false);
+    });
 
     return () => {
       subscription.unsubscribe();
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('popstate', handlePopState);
-      cleanupAuthState();
     };
   }, []);
 
@@ -201,7 +179,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      cleanupAuthState();
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Error signing out:', error);

@@ -12,23 +12,10 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user session is active in current tab
-    const sessionActive = sessionStorage.getItem('user-session-active');
-    
-    if (!loading && (!user || !session || !sessionActive)) {
-      // Clear any remaining auth state and redirect
-      sessionStorage.removeItem('user-session-active');
+    if (!loading && (!user || !session)) {
       navigate('/auth', { replace: true });
     }
   }, [user, loading, session, navigate]);
-
-  // Additional check on component mount
-  useEffect(() => {
-    const sessionActive = sessionStorage.getItem('user-session-active');
-    if (!sessionActive) {
-      navigate('/auth', { replace: true });
-    }
-  }, [navigate]);
 
   if (loading) {
     return (
@@ -41,8 +28,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     );
   }
 
-  const sessionActive = sessionStorage.getItem('user-session-active');
-  if (!user || !session || !sessionActive) {
+  if (!user || !session) {
     return null; // Will redirect via useEffect
   }
 

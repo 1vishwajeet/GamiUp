@@ -42,14 +42,7 @@ const UserDashboardModal = ({ onClose }: UserDashboardModalProps) => {
             </h2>
             <p className="text-white/70">Manage your gaming profile and settings</p>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="text-white/70 hover:text-white hover:bg-white/10"
-          >
-            <X className="w-5 h-5" />
-          </Button>
+          
         </div>
 
         {/* Content */}
@@ -74,9 +67,25 @@ const UserDashboardModal = ({ onClose }: UserDashboardModalProps) => {
                     />
                   </div>
                   <div>
+                    <Label className="text-white/80">Username</Label>
+                    <Input 
+                      value={userProfile.username} 
+                      readOnly 
+                      className="bg-white/10 border-white/20 text-white"
+                    />
+                  </div>
+                  <div>
                     <Label className="text-white/80">Email</Label>
                     <Input 
                       value={userProfile.email} 
+                      readOnly 
+                      className="bg-white/10 border-white/20 text-white"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-white/80">Contact Number</Label>
+                    <Input 
+                      value={userProfile.whatsapp_number} 
                       readOnly 
                       className="bg-white/10 border-white/20 text-white"
                     />
@@ -111,43 +120,9 @@ const UserDashboardModal = ({ onClose }: UserDashboardModalProps) => {
                 </CardContent>
               </Card>
             </div>
+            
 
-            {/* Gaming Profile */}
-            <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Target className="w-5 h-5" />
-                  Gaming Profile
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 sm:p-6">
-                <div className="space-y-4">
-                  <div>
-                    <Label className="text-white/80">Favorite Game</Label>
-                    <Input 
-                      value={userProfile.favorite_game || 'BGMI'} 
-                      readOnly 
-                      className="bg-white/10 border-white/20 text-white"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label className="text-white/80">Achievements</Label>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {userProfile.achievements && userProfile.achievements.length > 0 ? (
-                        userProfile.achievements.map((achievement, index) => (
-                          <Badge key={index} variant="secondary" className="bg-gaming-cyan/20 text-gaming-cyan">
-                            {achievement}
-                          </Badge>
-                        ))
-                      ) : (
-                        <p className="text-white/70 text-sm">No achievements yet</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            
 
           </div>
         </div>
@@ -161,11 +136,6 @@ const UserDashboardModal = ({ onClose }: UserDashboardModalProps) => {
               className="w-full sm:w-auto bg-white/10 border-white/30 text-white hover:bg-white/20"
             >
               Close
-            </Button>
-            <Button
-              className="w-full sm:w-auto bg-gradient-primary hover:shadow-glow font-gaming font-bold"
-            >
-              Edit Profile
             </Button>
           </div>
         </div>

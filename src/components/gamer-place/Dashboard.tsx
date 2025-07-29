@@ -4,16 +4,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Trophy, 
-  Gamepad2, 
-  Settings, 
-  LogOut, 
+import {
+  Trophy,
+  Gamepad2,
+  Settings,
+  LogOut,
   User,
   Star,
   Target,
   Calendar,
-  Award
+  Award,
+  Flame
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -65,11 +66,36 @@ const Dashboard = () => {
     );
   }
 
+
+  const cards = [
+    {
+      title: "Rise. Grind. Win.",
+      desc: "Every match is a step closer to greatness.",
+      icon: <Flame size={40} />,
+      color: " ",
+    },
+    {
+      title: "Precision Beats Luck",
+      desc: "Sharpen your aim, not just your skills.",
+      icon: <Target size={40} />,
+      color: "",
+    },
+    {
+      title: "Legends Never Quit",
+      desc: "Defeat is a lesson, not an end.",
+      icon: <Trophy size={40} />,
+      color: "",
+    },
+  ];
+
+
+
+
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Full Background Image */}
       <div className="absolute inset-0 z-0">
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage: `url('/lovable-uploads/9489101.jpg')`
@@ -91,9 +117,8 @@ const Dashboard = () => {
               </div>
               <div>
                 <h1 className="text-3xl font-gaming font-bold text-white">
-                  Welcome, {userProfile.name}!
+                  Welcome, {userProfile.name}😍
                 </h1>
-                <p className="text-gaming-cyan">{userProfile.skill_level} Player</p>
               </div>
             </div>
             <div className="flex gap-2">
@@ -118,104 +143,21 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-
-            <Card className="bg-white/10 border-white/20 backdrop-blur-xl">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-white/70 flex items-center gap-2">
-                  <Gamepad2 className="w-4 h-4" />
-                  Games Played
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-gaming font-bold text-gaming-orange">
-                  {userProfile.games_played || 0}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white/10 border-white/20 backdrop-blur-xl">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-white/70 flex items-center gap-2">
-                  <Trophy className="w-4 h-4" />
-                  Total Winnings
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-gaming font-bold text-gaming-purple">
-                  ₹{userProfile.total_winnings?.toLocaleString() || '0'}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white/10 border-white/20 backdrop-blur-xl">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-white/70 flex items-center gap-2">
-                  <Target className="w-4 h-4" />
-                  Favorite Game
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-lg font-gaming font-bold text-gaming-blue">
-                  {userProfile.favorite_game || 'BGMI'}
-                </p>
-              </CardContent>
-            </Card>
+          {/* Motivational Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 ">
+            {cards.map((card, index) => (
+              <motion.div
+                key={index}
+                whileHover={{ scale: 1.05 }}
+                className={`bg-gradient-to-br ${card.color} text-white p-6 rounded-2xl shadow-xl hover:shadow-2xl transition duration-300 `}
+              >
+                <div className="flex items-center justify-center mb-4">{card.icon}</div>
+                <h3 className="text-xl font-bold text-center mb-2">{card.title}</h3>
+                <p className="text-sm text-center">{card.desc}</p>
+              </motion.div>
+            ))}
           </div>
 
-          {/* Quick Actions */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <Card className="bg-white/10 border-white/20 backdrop-blur-xl">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Award className="w-5 h-5" />
-                  Achievements
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {userProfile.achievements && userProfile.achievements.length > 0 ? (
-                    userProfile.achievements.map((achievement, index) => (
-                      <Badge key={index} variant="secondary" className="bg-gaming-cyan/20 text-gaming-cyan">
-                        {achievement}
-                      </Badge>
-                    ))
-                  ) : (
-                    <p className="text-white/70">No achievements yet</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white/10 border-white/20 backdrop-blur-xl">
-              <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Calendar className="w-5 h-5" />
-                  Quick Actions
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <Button
-                    variant="outline"
-                    className="w-full bg-white/10 border-white/30 text-white hover:bg-white/20"
-                    onClick={() => setShowUserModal(true)}
-                  >
-                    <User className="w-4 h-4 mr-2" />
-                    View Full Profile
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full bg-white/10 border-white/30 text-white hover:bg-white/20"
-                  >
-                    <Trophy className="w-4 h-4 mr-2" />
-                    Browse Contests
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
 
           {/* Live Challenges Section */}
           <LiveChallengesSection />
@@ -223,23 +165,31 @@ const Dashboard = () => {
           {/* Upload Results Section */}
           <UploadResultsSection />
 
-          {/* Recent Activity */}
-          <Card className="bg-white/10 border-white/20 backdrop-blur-xl mb-8">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Star className="w-5 h-5" />
-                Recent Activity
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <p className="text-white/70">No recent activity</p>
-                <p className="text-white/50 text-sm mt-2">
-                  Join a contest to see your activity here
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="w-full bg-transparent py-10 px-6 mt-16 border-t border-gray-700 ">
+            <div className="max-w-4xl mx-auto text-center space-y-6">
+
+              <h2 className="text-5xl md:text-4xl font-extrabold text-yellow-500 tracking-wide">
+                You’re not just here to PLAY
+              </h2>
+
+              <p className="text-gray-500 text-xl md:text-xl font-medium leading-relaxed">
+                You’re here to conquer, to compete, to rise.
+                Every challenge you take brings you one step closer to becoming a legend.
+              </p>
+
+
+              <p className="text-purple-500 italic text-lg mt-8">
+                “Greatness isn’t given. It’s earned – one match at a time.”
+              </p>
+
+            </div>
+          </div>
+
+
+
+
+
+
         </div>
       </div>
 

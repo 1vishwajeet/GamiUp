@@ -214,6 +214,8 @@ const UploadResultsSection = () => {
                     Upload a clear screenshot showing your rank and kills
                   </p>
                 </div>
+                
+                
 
                 <div className="space-y-2">
                   <Label htmlFor="notes">Additional Notes (Optional)</Label>

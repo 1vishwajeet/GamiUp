@@ -27,15 +27,15 @@ export function ContestJoinModal({ contest, isOpen, onClose, userProfile, onJoin
 
   const getGameIdLabel = (game: string) => {
     const gameLabels: { [key: string]: string } = {
-      'PUBG': 'PUBG Player UID',
-      'Free Fire': 'Free Fire UID',
-      'COD Mobile': 'COD Mobile UID',
-      'BGMI': 'BGMI Player UID',
-      'Valorant': 'Valorant UID',
+      'PUBG': 'PUBG Player ID',
+      'Free Fire': 'Free Fire ID',
+      'COD Mobile': 'COD Mobile ID',
+      'BGMI': 'BGMI Player ID',
+      'Valorant': 'Valorant ID',
       'Clash Royale': 'Clash Royale Player Tag',
       'Clash of Clans': 'Clash of Clans Player Tag'
     };
-    return gameLabels[game] || `${game}Game UID`;
+    return gameLabels[game] || `${game} Game ID`;
   };
 
   const handlePayment = async () => {
@@ -155,7 +155,10 @@ export function ContestJoinModal({ contest, isOpen, onClose, userProfile, onJoin
             <CardContent className="p-4">
               <h3 className="font-semibold text-lg mb-2">{contest.title}</h3>
               <div className="space-y-2 text-sm">
-                
+                <div className="flex justify-between">
+                  <span>Game:</span>
+                  <Badge variant="secondary">{contest.game}</Badge>
+                </div>
                 <div className="flex justify-between">
                   <span>Entry Fee:</span>
                   <span className="font-semibold">₹{contest.entry_fee}</span>

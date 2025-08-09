@@ -25,8 +25,9 @@ interface ContestDetailsModalProps {
   contest: Contest | null;
   isOpen: boolean;
   onClose: () => void;
-  onJoinContest?: (contestId: string, entryFee: number) => void;
+  onJoinContest?: (contest: Contest) => void;
   showJoinButton?: boolean;
+  isUserJoined?: boolean;
 }
 
 export const ContestDetailsModal = ({ 
@@ -34,7 +35,8 @@ export const ContestDetailsModal = ({
   isOpen, 
   onClose, 
   onJoinContest,
-  showJoinButton = false 
+  showJoinButton = false,
+  isUserJoined = false
 }: ContestDetailsModalProps) => {
   if (!contest) return null;
 
@@ -84,7 +86,7 @@ export const ContestDetailsModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-7xl w-[95vw] max-h-[95vh] overflow-y-auto bg-background/95 backdrop-blur-xl border border-white/20 p-0">
+      <DialogContent className="max-w-7xl w-[95vw] max-h-[85vh] sm:max-h-[90vh] my-4 sm:my-8 overflow-y-auto bg-background/95 backdrop-blur-xl border border-white/20 p-0">
         {/* Header with Close Button */}
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-white/20 p-4 sm:p-6">
           <div className="flex items-center justify-between">
@@ -240,7 +242,36 @@ export const ContestDetailsModal = ({
           </div>
         </div>
 
-        
+        {/* Action Buttons */}
+        {showJoinButton && onJoinContest && (
+          <div className="flex gap-3 sm:gap-4">
+            {status === "ENDED" ? (
+              <Button 
+                disabled
+                className="flex-1 bg-gray-500/20 border border-gray-500/50 text-gray-500 font-gaming font-bold cursor-not-allowed text-sm sm:text-base py-2 sm:py-3"
+              >
+                <Trophy className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                Contest Ended
+              </Button>
+            ) : isUserJoined ? (
+              <Button 
+                disabled
+                className="flex-1 bg-gaming-green/20 border border-gaming-green/50 text-gaming-green font-gaming font-bold cursor-not-allowed text-sm sm:text-base py-2 sm:py-3"
+              >
+                <Trophy className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                Already Joined ✓
+              </Button>
+            ) : (
+              <Button 
+                className="flex-1 bg-gradient-to-r from-gaming-purple to-gaming-blue hover:from-gaming-purple/80 hover:to-gaming-blue/80 font-gaming font-bold text-sm sm:text-base py-2 sm:py-3"
+                onClick={() => onJoinContest(contest)}
+              >
+                <Trophy className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                Join Contest
+              </Button>
+            )}
+          </div>
+        )}
         </div>
       </DialogContent>
     </Dialog>

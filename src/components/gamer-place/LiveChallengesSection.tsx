@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { ContestDetailsModal } from "@/components/ui/contest-details-modal";
 import { ContestJoinModal } from "@/components/ui/contest-join-modal";
+import { ContestShareButton } from "@/components/ui/contest-share-button";
 
 const LiveChallengesSection = () => {
   const [contests, setContests] = useState<any[]>([]);
@@ -27,6 +28,13 @@ const LiveChallengesSection = () => {
     }
     if (user) {
       fetchUserJoinedContests();
+    }
+
+    // Check if contest ID is in URL parameters to auto-open modal
+    const urlParams = new URLSearchParams(window.location.search);
+    const contestId = urlParams.get('contest');
+    if (contestId) {
+      handleSharedContest(contestId);
     }
 
     // Set up real-time subscription for contest changes
@@ -128,6 +136,38 @@ const LiveChallengesSection = () => {
     if (now < start) return "UPCOMING";
     if (now >= start && now < end) return "ACTIVE";
     return "ENDED";
+  };
+
+  const handleSharedContest = async (contestId: string) => {
+    try {
+      const contest = contests.find(c => c.id === contestId);
+      if (contest) {
+        setSelectedContest(contest);
+        setIsModalOpen(true);
+        // Clean up URL
+        window.history.replaceState({}, '', window.location.pathname);
+      } else {
+        // Fetch the specific contest if not in current list
+        const { data, error } = await supabase
+          .from('contests')
+          .select(`
+            *,
+            image_updated_at,
+            contest_participants!fk_contest_participants_contest_id(count)
+          `)
+          .eq('id', contestId)
+          .single();
+
+        if (data && !error) {
+          setSelectedContest(data);
+          setIsModalOpen(true);
+          // Clean up URL
+          window.history.replaceState({}, '', window.location.pathname);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching shared contest:', error);
+    }
   };
 
   const handleJoinContest = (contest: any) => {
@@ -235,6 +275,12 @@ const LiveChallengesSection = () => {
                     <span className="w-2 h-2 bg-gaming-blue rounded-full" />
                     {contest.game}
                   </span>
+                  {contest.created_by && contest.profiles && (
+                    <span className="flex items-center gap-1">
+                      <span className="w-2 h-2 bg-gaming-orange rounded-full" />
+                      By {contest.profiles.name}
+                    </span>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-6">
@@ -271,18 +317,24 @@ const LiveChallengesSection = () => {
                 </div>
 
                 <div className="space-y-3">
-                  <Button 
-                    variant="outline" 
-                    className="w-full bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300" 
-                    size="sm"
-                    onClick={() => {
-                      setSelectedContest(contest);
-                      setIsModalOpen(true);
-                    }}
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    View Details
-                  </Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300" 
+                      size="sm"
+                      onClick={() => {
+                        setSelectedContest(contest);
+                        setIsModalOpen(true);
+                      }}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      View Details
+                    </Button>
+                    <ContestShareButton 
+                      contest={contest}
+                      variant="outline"
+                    />
+                  </div>
                   {status === "ACTIVE" || status === "UPCOMING" ? (
                     isUserJoined ? (
                       <Button 
@@ -327,6 +379,7 @@ const LiveChallengesSection = () => {
         onClose={() => setIsModalOpen(false)}
         onJoinContest={handleJoinContest}
         showJoinButton={true}
+        isUserJoined={userJoinedContests.includes(selectedContest?.id || '')}
       />
 
       {selectedContest && currentUserProfile && (

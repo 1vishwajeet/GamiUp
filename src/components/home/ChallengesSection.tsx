@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ContestDetailsModal } from "@/components/ui/contest-details-modal";
+import { ContestShareButton } from "@/components/ui/contest-share-button";
 
 const ChallengesSection = () => {
   const navigate = useNavigate();
@@ -39,6 +40,19 @@ const ChallengesSection = () => {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  // Separate useEffect for handling shared contest after contests are loaded
+  useEffect(() => {
+    if (contests.length > 0) {
+      // Check if contest ID is in URL parameters to auto-open modal
+      const urlParams = new URLSearchParams(window.location.search);
+      const contestId = urlParams.get('contest');
+      if (contestId) {
+        console.log('🔗 Checking for shared contest:', contestId);
+        handleSharedContest(contestId);
+      }
+    }
+  }, [contests]);
 
   const fetchContests = async () => {
     try {
@@ -96,6 +110,53 @@ const ChallengesSection = () => {
     return "ENDED";
   };
 
+  const handleSharedContest = async (contestId: string) => {
+    try {
+      console.log('🔍 Looking for contest ID:', contestId, 'in loaded contests:', contests.length);
+      
+      const contest = contests.find(c => c.id === contestId);
+      if (contest) {
+        console.log('✅ Found contest in loaded list:', contest.title);
+        setSelectedContest(contest);
+        setIsModalOpen(true);
+        // Clean up URL
+        window.history.replaceState({}, '', window.location.pathname);
+      } else {
+        console.log('🔄 Contest not in loaded list, fetching from database...');
+        // Fetch the specific contest if not in current list
+        const { data, error } = await supabase
+          .from('contests')
+          .select(`
+            *,
+            image_updated_at,
+            contest_participants!fk_contest_participants_contest_id(count)
+          `)
+          .eq('id', contestId)
+          .neq('status', 'deleted')
+          .single();
+
+        console.log('📡 Database fetch result:', { data, error });
+
+        if (data && !error) {
+          console.log('✅ Found contest in database:', data.title);
+          setSelectedContest(data);
+          setIsModalOpen(true);
+          // Clean up URL
+          window.history.replaceState({}, '', window.location.pathname);
+        } else {
+          console.error('❌ Contest not found:', error);
+        }
+      }
+    } catch (error) {
+      console.error('💥 Error fetching shared contest:', error);
+    }
+  };
+
+  const handleJoinFromHome = (contest: any) => {
+    // Redirect to gamer place with contest ID in URL for auto-opening
+    navigate(`/gamer-place?contest=${contest.id}`);
+  };
+
   if (loading) {
     return (
       <section id="challenges" className="relative py-20 px-4 overflow-hidden">
@@ -145,7 +206,7 @@ const ChallengesSection = () => {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 px-2 sm:px-0">
           {contests.length === 0 ? (
             <div className="col-span-full text-center text-white/70">
               No contests available at the moment. Check back soon!
@@ -165,12 +226,12 @@ const ChallengesSection = () => {
                 viewport={{ once: true }}
                 className="group"
               >
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl overflow-hidden transition-all duration-500 hover:scale-105 hover:bg-white/15 hover:shadow-2xl hover:shadow-gaming-purple/20 group-hover:backdrop-blur-xl relative">
+              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl sm:rounded-3xl overflow-hidden transition-all duration-500 hover:scale-105 hover:bg-white/15 hover:shadow-2xl hover:shadow-gaming-purple/20 group-hover:backdrop-blur-xl relative">
                 {/* Glossy overlay effect */}
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl" />
                 
                 {/* Challenge Header with Image */}
-                <div className="relative h-48 overflow-hidden">
+                <div className="relative h-40 sm:h-48 overflow-hidden">
                   <img 
                     src={contest.image_url ? (contest.image_url.startsWith('data:') ? contest.image_url : `${contest.image_url}?v=${new Date(contest.image_updated_at || contest.created_at).getTime()}`) : "/placeholder.svg?height=200&width=300&text=" + encodeURIComponent(contest.game)}
                     alt={contest.title}
@@ -179,24 +240,24 @@ const ChallengesSection = () => {
                   {/* Gradient overlay for better text readability */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
                   
-                  <div className="absolute top-4 left-4 z-10">
+                  <div className="absolute top-2 sm:top-4 left-2 sm:left-4 z-10">
                     <Badge 
                       variant={status === "ACTIVE" ? "default" : "secondary"}
-                      className={`${status === "ACTIVE" ? "bg-gaming-green" : status === "UPCOMING" ? "bg-gaming-purple" : "bg-gray-500"} text-white border-0 backdrop-blur-sm bg-opacity-90`}
+                      className={`${status === "ACTIVE" ? "bg-gaming-green" : status === "UPCOMING" ? "bg-gaming-purple" : "bg-gray-500"} text-white border-0 backdrop-blur-sm bg-opacity-90 text-xs sm:text-sm`}
                     >
                       {status}
                     </Badge>
                   </div>
-                  <div className="absolute top-4 right-4 z-10">
-                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 group-hover:scale-110 transition-transform duration-300">
-                      <Trophy className="w-6 h-6 text-gaming-orange" />
+                  <div className="absolute top-2 sm:top-4 right-2 sm:right-4 z-10">
+                    <div className="w-8 h-8 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-lg sm:rounded-xl flex items-center justify-center border border-white/30 group-hover:scale-110 transition-transform duration-300">
+                      <Trophy className="w-4 h-4 sm:w-6 sm:h-6 text-gaming-orange" />
                     </div>
                   </div>
                 </div>
 
                 {/* Challenge Content */}
-                <div className="p-6 relative z-10">
-                  <h3 className="text-xl font-gaming font-bold text-white mb-2 group-hover:text-white/90 transition-colors duration-300">
+                <div className="p-3 sm:p-4 lg:p-6 relative z-10">
+                  <h3 className="text-lg sm:text-xl font-gaming font-bold text-white mb-2 group-hover:text-white/90 transition-colors duration-300 line-clamp-2">
                     {contest.title}
                   </h3>
                   
@@ -207,23 +268,23 @@ const ChallengesSection = () => {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
-                      <p className="text-sm text-white/70 mb-1">Prize Pool</p>
-                      <p className="text-lg font-gaming font-bold text-gaming-green">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-4 sm:mb-6">
+                    <div className="bg-white/10 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 border border-white/20">
+                      <p className="text-xs sm:text-sm text-white/70 mb-1">Prize Pool</p>
+                      <p className="text-sm sm:text-lg font-gaming font-bold text-gaming-green">
                         ₹{Number(contest.prize_pool).toLocaleString()}
                       </p>
                     </div>
-                    <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
-                      <p className="text-sm text-white/70 mb-1">Entry Fee</p>
-                      <p className="text-lg font-gaming font-bold text-gaming-blue">
+                    <div className="bg-white/10 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 border border-white/20">
+                      <p className="text-xs sm:text-sm text-white/70 mb-1">Entry Fee</p>
+                      <p className="text-sm sm:text-lg font-gaming font-bold text-gaming-blue">
                         ₹{Number(contest.entry_fee).toLocaleString()}
                       </p>
                     </div>
                   </div>
 
-                  <div className="space-y-3 mb-6">
-                    <div className="flex items-center justify-between text-sm">
+                  <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
+                    <div className="flex items-center justify-between text-xs sm:text-sm">
                       <span className="text-white/70">Participants</span>
                       <span className="font-bold text-white">{participantCount}/{contest.max_participants}</span>
                     </div>
@@ -233,32 +294,39 @@ const ChallengesSection = () => {
                         style={{ width: `${(participantCount / contest.max_participants) * 100}%` }}
                       />
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-white/70">
-                      <Clock className="w-4 h-4" />
-                      <span>{status === "ACTIVE" ? "Ends in" : status === "UPCOMING" ? "Starts in" : "Contest ended"}</span>
+                    <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-white/70">
+                      <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="truncate">{status === "ACTIVE" ? "Ends in" : status === "UPCOMING" ? "Starts in" : "Contest ended"}</span>
                       <span className="text-gaming-orange font-bold">{timeLeft}</span>
                     </div>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button 
+                        variant="outline" 
+                        className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300 text-xs sm:text-sm p-2 sm:px-3 sm:py-2" 
+                        onClick={() => {
+                          setSelectedContest(contest);
+                          setIsModalOpen(true);
+                        }}
+                      >
+                        <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                        <span className="hidden sm:inline">View Details</span>
+                        <span className="sm:hidden">Details</span>
+                      </Button>
+                      <ContestShareButton 
+                        contest={contest}
+                        variant="outline"
+                      />
+                    </div>
                     <Button 
-                      variant="outline" 
-                      className="w-full bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 hover:border-white/50 transition-all duration-300" 
-                      size="sm"
-                      onClick={() => {
-                        setSelectedContest(contest);
-                        setIsModalOpen(true);
-                      }}
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      View Details
-                    </Button>
-                    <Button 
-                      className="w-full bg-gradient-to-r from-gaming-purple to-gaming-blue hover:from-gaming-purple/80 hover:to-gaming-blue/80 hover:shadow-glow font-gaming font-bold text-white border-0 transition-all duration-300"
+                      className="w-full bg-gradient-to-r from-gaming-purple to-gaming-blue hover:from-gaming-purple/80 hover:to-gaming-blue/80 hover:shadow-glow font-gaming font-bold text-white border-0 transition-all duration-300 text-xs sm:text-sm p-2 sm:px-4 sm:py-3"
                       onClick={() => navigate("/gamer-place")}
                     >
-                      <Trophy className="w-4 h-4 mr-2" />
-                      Visit Gamer Place to join
+                      <Trophy className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Visit Gamer Place to join</span>
+                      <span className="sm:hidden">Join</span>
                     </Button>
                   </div>
                 </div>
@@ -293,7 +361,8 @@ const ChallengesSection = () => {
           contest={selectedContest}
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          showJoinButton={false}
+          onJoinContest={handleJoinFromHome}
+          showJoinButton={true}
         />
       </div>
     </section>

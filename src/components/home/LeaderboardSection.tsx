@@ -73,7 +73,7 @@ const LeaderboardSection = () => {
             <Trophy className="w-8 h-8 text-gaming-orange" />
           </div>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Top performers who dominate the arena and earn the biggest rewards
+            Top performers who dominate the GamiZN and earn the biggest rewards
           </p>
         </motion.div>
 

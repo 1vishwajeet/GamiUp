@@ -7,7 +7,8 @@ import {
   Award, 
   LogOut,
   Menu,
-  X
+  X,
+  Target
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -37,6 +38,7 @@ const AdminSidebar = ({ activeSection, onSectionChange, isMobileOpen, onMobileTo
     { id: "contests", label: "Contest Manager", icon: Trophy },
     { id: "users", label: "User Management", icon: Users },
     { id: "joinedUsers", label: "Contest Joins", icon: UserCheck },
+    { id: "customChallenges", label: "Custom Challenges Info", icon: Target },
     { id: "winners", label: "Winning Verification", icon: Award },
   ];
 

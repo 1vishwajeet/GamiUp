@@ -40,7 +40,7 @@ const UserDashboardModal = ({ onClose }: UserDashboardModalProps) => {
             <h2 className="text-2xl font-gaming font-bold text-white">
               User Profile
             </h2>
-            <p className="text-white/70">Manage your gaming profile and settings</p>
+            <p className="text-white/70">See your Gaming profile</p>
           </div>
           
         </div>

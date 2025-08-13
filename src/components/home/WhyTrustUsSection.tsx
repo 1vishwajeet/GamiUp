@@ -78,17 +78,17 @@ const WhyTrustUsSection = () => {
 
   const stats = [
     {
-      value: "50K+",
-      numericValue: 50000,
+      value: "5K+",
+      numericValue: 5000,
       suffix: "K+",
       label: "Verified Players",
       color: "text-gaming-blue",
     },
     {
-      value: "₹2.5Cr+",
-      numericValue: 2.5,
+      value: "₹80k+",
+      numericValue: 80,
       prefix: "₹",
-      suffix: "Cr+",
+      suffix: "k+",
       label: "Payouts Made",
       color: "text-gaming-green",
     },

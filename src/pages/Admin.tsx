@@ -10,6 +10,7 @@ import ContestManager from "@/components/admin/ContestManager";
 import UserManagement from "@/components/admin/UserManagement";
 import ContestJoinsList from "@/components/admin/ContestJoinsList";
 import WinnerVerification from "@/components/admin/WinnerVerification";
+import CustomChallengesList from "@/components/admin/CustomChallengesList";
 import { useAdminData } from "@/hooks/useAdminData";
 
 const Admin = () => {
@@ -39,6 +40,8 @@ const Admin = () => {
         return <ContestJoinsList />;
       case "winners":
         return <WinnerVerification />;
+      case "customChallenges":
+        return <CustomChallengesList />;
       default:
         return (
           <Dashboard 

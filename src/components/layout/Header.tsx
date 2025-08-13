@@ -162,7 +162,7 @@ const Header = () => {
           {/* Mobile Menu Footer */}
           <div className="p-6 border-t border-white/10">
             <p className="text-sm text-muted-foreground text-center">
-              Ready to compete? Join the arena now!
+              Ready to compete? Join the GamiZN Now!
             </p>
           </div>
         </div>

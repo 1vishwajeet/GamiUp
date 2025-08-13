@@ -62,7 +62,7 @@ const LoginForm = ({ onSuccess, onSwitchToSignup }: LoginFormProps) => {
           Login to Gamer Place
         </h2>
         <p className="text-muted-foreground">
-          Enter your credentials to access the arena
+          Enter your credentials to access the Gamer Place
         </p>
       </div>
 

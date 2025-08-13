@@ -60,7 +60,10 @@ const Dashboard = ({ dashboardStats, loading }: DashboardProps) => {
                   Welcome back, {adminUser?.username}!
                 </h1>
                 <p className="text-muted-foreground mt-1">
-                  Managing GamiZN Platform - {adminUser?.role}
+                  Managing Esports Contest Platform - {adminUser?.role}
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  admin@esportscontest.com | Last login: Today at 10:30 AM
                 </p>
               </div>
               <div className="text-right">

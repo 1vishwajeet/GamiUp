@@ -16,7 +16,10 @@ export type Database = {
     Tables: {
       contest_participants: {
         Row: {
+          additional_notes: string | null
           contest_id: string
+          contest_name: string | null
+          expected_prize_amount: number | null
           game_id: string | null
           id: string
           is_winner: boolean | null
@@ -30,7 +33,10 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          additional_notes?: string | null
           contest_id: string
+          contest_name?: string | null
+          expected_prize_amount?: number | null
           game_id?: string | null
           id?: string
           is_winner?: boolean | null
@@ -44,7 +50,10 @@ export type Database = {
           user_id: string
         }
         Update: {
+          additional_notes?: string | null
           contest_id?: string
+          contest_name?: string | null
+          expected_prize_amount?: number | null
           game_id?: string | null
           id?: string
           is_winner?: boolean | null
@@ -203,6 +212,53 @@ export type Database = {
           title?: string
         }
         Relationships: []
+      }
+      custom_contest_payments: {
+        Row: {
+          amount: number
+          contest_id: string | null
+          created_at: string | null
+          currency: string | null
+          id: string
+          razorpay_order_id: string | null
+          razorpay_payment_id: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          contest_id?: string | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          contest_id?: string | null
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_contest_payments_contest_id_fkey"
+            columns: ["contest_id"]
+            isOneToOne: false
+            referencedRelation: "contests"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       leaderboard: {
         Row: {
@@ -373,6 +429,39 @@ export type Database = {
         }
         Relationships: []
       }
+      winner_submissions: {
+        Row: {
+          additional_notes: string | null
+          contest_name: string
+          expected_prize_amount: number
+          id: string
+          result_screenshot: string | null
+          status: string | null
+          submitted_at: string
+          user_id: string
+        }
+        Insert: {
+          additional_notes?: string | null
+          contest_name: string
+          expected_prize_amount: number
+          id?: string
+          result_screenshot?: string | null
+          status?: string | null
+          submitted_at?: string
+          user_id: string
+        }
+        Update: {
+          additional_notes?: string | null
+          contest_name?: string
+          expected_prize_amount?: number
+          id?: string
+          result_screenshot?: string | null
+          status?: string | null
+          submitted_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -380,6 +469,10 @@ export type Database = {
     Functions: {
       admin_delete_contest: {
         Args: { p_contest_id: string }
+        Returns: Json
+      }
+      admin_delete_winner_submission: {
+        Args: { submission_id: string }
         Returns: Json
       }
       get_admin_contest_participants: {
@@ -430,6 +523,30 @@ export type Database = {
           participant_count: number
         }[]
       }
+      get_admin_custom_challenges: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          title: string
+          description: string
+          game: string
+          entry_fee: number
+          first_prize: number
+          second_prize: number
+          third_prize: number
+          max_participants: number
+          start_date: string
+          end_date: string
+          status: string
+          created_at: string
+          created_by: string
+          creator_name: string
+          creator_contact: string
+          participant_count: number
+          payment_status: string
+          challenge_type: string
+        }[]
+      }
       get_admin_dashboard_stats: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -477,6 +594,7 @@ export type Database = {
           contest_id: string
           score: number
           result_screenshot: string
+          additional_notes: string
           is_winner: boolean
           prize_amount: number
           joined_at: string
@@ -485,6 +603,27 @@ export type Database = {
           first_prize: number
           second_prize: number
           third_prize: number
+          contest_name: string
+          expected_prize_amount: number
+        }[]
+      }
+      get_custom_challenge_participants: {
+        Args: { challenge_id: string }
+        Returns: {
+          id: string
+          user_id: string
+          contest_id: string
+          transaction_id: string
+          payment_id: string
+          payment_status: string
+          joined_at: string
+          score: number
+          result_screenshot: string
+          is_winner: boolean
+          prize_amount: number
+          game_id: string
+          user_name: string
+          user_contact: string
         }[]
       }
       has_role: {

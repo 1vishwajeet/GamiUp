@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 export interface DashboardStats {
   totalUsers: number;
@@ -40,6 +41,7 @@ export interface WinnerSubmission {
 }
 
 export const useAdminData = () => {
+  const { toast } = useToast();
   const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
     totalUsers: 0,
     totalContests: 0,
@@ -199,11 +201,14 @@ export const useAdminData = () => {
 
   const fetchWinnerSubmissions = async () => {
     try {
-      console.log('🏆 Fetching winner submissions using admin function...');
+      console.log('🏆 Fetching winner submissions from new table...');
+      console.log('🔍 Current URL:', window.location.href);
       
       // Check if admin is authenticated
       const adminAuth = sessionStorage.getItem('adminAuth');
       const sessionActive = sessionStorage.getItem('admin-session-active');
+      
+      console.log('🔐 Admin session check for winner submissions:', { adminAuth, sessionActive });
       
       if (adminAuth !== 'true' || sessionActive !== 'true') {
         console.log('❌ Admin not authenticated for winner submissions');
@@ -211,30 +216,47 @@ export const useAdminData = () => {
         return;
       }
 
-      // Use admin function to get winner submissions
+      // First fetch winner submissions
       const { data: winnersData, error: winnersError } = await supabase
-        .rpc('get_admin_winner_submissions');
-
-      console.log('🏆 Winner submissions RPC result:', { data: winnersData, error: winnersError });
+        .from('winner_submissions')
+        .select('*')
+        .order('submitted_at', { ascending: false });
 
       if (winnersError) {
         console.error('❌ Error fetching winner submissions:', winnersError);
         throw winnersError;
       }
 
-      const submissions: WinnerSubmission[] = winnersData?.map((submission: any, index: number) => ({
-        id: submission.id,
-        userName: submission.user_name || 'Unknown User',
-        userId: submission.user_id.slice(0, 8).toUpperCase(),
-        contestName: submission.contest_title || 'Unknown Contest',
-        rank: index + 1, // Simple ranking for now
-        kills: submission.score || 0,
-        screenshotProof: submission.result_screenshot,
-        additionalNotes: submission.additional_notes || null,
-        submissionDateTime: submission.joined_at,
-        status: submission.prize_amount ? 'Approved' : 'Pending',
-        prizeAmount: submission.prize_amount || submission.first_prize || 0,
-      })) || [];
+      // Then fetch profiles for the users
+      const userIds = winnersData?.map(submission => submission.user_id) || [];
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, name, whatsapp_number')
+        .in('user_id', userIds);
+
+      console.log('🏆 Winner submissions result:', { data: winnersData, error: winnersError });
+      console.log('👥 Profiles data result:', { data: profilesData, error: profilesError });
+
+      if (profilesError) {
+        console.error('❌ Error fetching profiles:', profilesError);
+      }
+
+      const submissions: WinnerSubmission[] = winnersData?.map((submission: any, index: number) => {
+        const profile = profilesData?.find((p: any) => p.user_id === submission.user_id);
+        return {
+          id: submission.id,
+          userName: profile?.name || 'Unknown User',
+          userId: submission.user_id.slice(0, 8).toUpperCase(),
+          contestName: submission.contest_name,
+          rank: index + 1, // Simple ranking for now (keeping for backward compatibility)
+          kills: 0, // Not needed anymore but keeping for backward compatibility
+          screenshotProof: submission.result_screenshot,
+          additionalNotes: submission.additional_notes || null,
+          submissionDateTime: submission.submitted_at,
+          status: submission.status === 'pending' ? 'Pending' : 'Approved',
+          prizeAmount: submission.expected_prize_amount || 0,
+        };
+      }) || [];
 
       console.log('✅ Final processed winner submissions:', submissions);
       setWinnerSubmissions(submissions);
@@ -244,25 +266,77 @@ export const useAdminData = () => {
     }
   };
 
-  const updateWinnerStatus = async (id: string, status: 'Approved' | 'Rejected') => {
+  const updateWinnerStatus = async (id: string, status: 'Delete') => {
     try {
-      const { error } = await supabase
-        .from('contest_participants')
-        .update({ 
-          prize_amount: status === 'Approved' ? 1000 : 0 // Default prize amount
-        })
-        .eq('id', id);
+      console.log('🗑️ Attempting to delete submission with ID:', id);
+      
+      if (status === 'Delete') {
+        // Check admin session using sessionStorage (since admin auth is separate)
+        const adminAuth = sessionStorage.getItem('adminAuth');
+        const sessionActive = sessionStorage.getItem('admin-session-active');
+        
+        console.log('🔐 Admin session check:', { adminAuth, sessionActive });
+        
+        if (adminAuth !== 'true' || sessionActive !== 'true') {
+          console.error('❌ Admin not authenticated via session');
+          toast({
+            title: "Authentication Error",
+            description: "Please login as admin",
+            variant: "destructive",
+          });
+          return;
+        }
 
-      if (error) throw error;
+        console.log('✅ Admin session verified, proceeding with delete...');
 
-      // Update local state
-      setWinnerSubmissions(prev => 
-        prev.map(sub => 
-          sub.id === id ? { ...sub, status } : sub
-        )
-      );
+        // Use admin function to delete bypassing RLS
+        const { data, error } = await supabase
+          .rpc('admin_delete_winner_submission', { submission_id: id });
+
+        console.log('🔧 Delete operation result:', { data, error });
+
+        if (error) {
+          console.error('❌ Delete error:', error);
+          toast({
+            title: "Delete Failed",
+            description: error.message || "Failed to delete submission",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (data && typeof data === 'object' && 'success' in data && !(data as any).success) {
+          console.error('❌ Delete failed:', (data as any).message);
+          toast({
+            title: "Delete Failed",
+            description: (data as any).message || "Failed to delete submission",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        console.log('✅ Successfully deleted submission from database');
+        
+        toast({
+          title: "Success",
+          description: "Submission removed successfully",
+        });
+        
+        // Remove from local state immediately
+        setWinnerSubmissions(prev => {
+          const updated = prev.filter(sub => sub.id !== id);
+          console.log('🔄 Updated local state, remaining submissions:', updated.length);
+          return updated;
+        });
+
+      }
     } catch (error) {
-      console.error('Error updating winner status:', error);
+      console.error('❌ Error deleting winner submission:', error);
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
     }
   };
 
@@ -291,9 +365,50 @@ export const useAdminData = () => {
           schema: 'public',
           table: 'contest_participants'
         },
-        () => {
-          console.log('🔄 Contest participants updated, refreshing data...');
-          fetchContestParticipants();
+        (payload) => {
+          console.log('🔄 Contest participants updated:', payload);
+          
+          // Handle DELETE events immediately without refetching
+          if (payload.eventType === 'DELETE' && payload.old) {
+            setWinnerSubmissions(prev => {
+              const updated = prev.filter(sub => sub.id !== payload.old.id);
+              console.log('🗑️ Real-time delete: Removed submission from local state');
+              return updated;
+            });
+           } else {
+             // For INSERT/UPDATE, refetch data
+             fetchContestParticipants();
+             // Don't refetch winner submissions here as they have their own listener
+           }
+          fetchDashboardStats();
+        }
+      )
+      .subscribe();
+
+    // Real-time listener for new winner_submissions table
+    const winnerSubmissionsChannel = supabase
+      .channel('admin-winner-submissions')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'winner_submissions'
+        },
+        (payload) => {
+          console.log('🔄 Winner submissions updated:', payload);
+          
+          // Handle DELETE events immediately without refetching
+          if (payload.eventType === 'DELETE' && payload.old) {
+            setWinnerSubmissions(prev => {
+              const updated = prev.filter(sub => sub.id !== payload.old.id);
+              console.log('🗑️ Real-time delete: Removed winner submission from local state');
+              return updated;
+            });
+          } else {
+            // For INSERT/UPDATE, refetch data
+            fetchWinnerSubmissions();
+          }
           fetchDashboardStats();
         }
       )
@@ -334,6 +449,7 @@ export const useAdminData = () => {
 
     return () => {
       supabase.removeChannel(participantsChannel);
+      supabase.removeChannel(winnerSubmissionsChannel);
       supabase.removeChannel(contestsChannel);
       supabase.removeChannel(profilesChannel);
     };

@@ -12,8 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 const UploadResultsSection = () => {
-  const [rank, setRank] = useState("");
-  const [kills, setKills] = useState("");
+  const [contestName, setContestName] = useState("");
+  const [expectedPrize, setExpectedPrize] = useState("");
   const [notes, setNotes] = useState("");
   const [screenshot, setScreenshot] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -70,33 +70,21 @@ const UploadResultsSection = () => {
         screenshotUrl = urlData.publicUrl;
       }
 
-      // First, get the user's most recent contest participation
-      const { data: participantData, error: fetchError } = await supabase
-        .from('contest_participants')
-        .select('id')
-        .eq('user_id', user.id)
-        .order('joined_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (fetchError || !participantData) {
-        throw new Error('No contest participation found. Please join a contest first.');
-      }
-
-      // Update the participant record with result
-      const { error: updateError } = await supabase
-        .from('contest_participants')
-        .update({
-          score: parseInt(kills),
+      // Create new winner submission record (no need to check contest participation)
+      const { error: insertError } = await supabase
+        .from('winner_submissions')
+        .insert({
+          user_id: user.id,
+          contest_name: contestName,
+          expected_prize_amount: parseFloat(expectedPrize),
           result_screenshot: screenshotUrl,
           additional_notes: notes.trim() || null,
-          is_winner: true // Mark as potential winner for verification
-        })
-        .eq('id', participantData.id);
+          status: 'pending'
+        });
 
-      if (updateError) {
-        console.error('Update error:', updateError);
-        throw updateError;
+      if (insertError) {
+        console.error('Insert error:', insertError);
+        throw insertError;
       }
 
       toast({
@@ -105,8 +93,8 @@ const UploadResultsSection = () => {
       });
 
       // Reset form
-      setRank("");
-      setKills("");
+      setContestName("");
+      setExpectedPrize("");
       setNotes("");
       setScreenshot(null);
       // Reset file input
@@ -166,22 +154,23 @@ const UploadResultsSection = () => {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="rank">Your Rank</Label>
+                    <Label htmlFor="contestName">Contest Name</Label>
                     <Input
-                      id="rank"
-                      placeholder="Enter your rank"
-                      value={rank}
-                      onChange={(e) => setRank(e.target.value)}
+                      id="contestName"
+                      placeholder="Enter contest name"
+                      value={contestName}
+                      onChange={(e) => setContestName(e.target.value)}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="kills">Total Kills</Label>
+                    <Label htmlFor="expectedPrize">Your Expected Prize Money</Label>
                     <Input
-                      id="kills"
-                      placeholder="Enter kill count"
-                      value={kills}
-                      onChange={(e) => setKills(e.target.value)}
+                      id="expectedPrize"
+                      type="number"
+                      placeholder="Enter expected prize amount"
+                      value={expectedPrize}
+                      onChange={(e) => setExpectedPrize(e.target.value)}
                       required
                     />
                   </div>
@@ -211,11 +200,9 @@ const UploadResultsSection = () => {
                     </label>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Upload a clear screenshot showing your rank and kills
+                    Upload a clear screenshot showing your contest participation
                   </p>
                 </div>
-                
-                
 
                 <div className="space-y-2">
                   <Label htmlFor="notes">Additional Notes (Optional)</Label>
@@ -269,7 +256,7 @@ const UploadResultsSection = () => {
               <div className="space-y-4 text-sm text-muted-foreground">
                 <div className="flex items-start gap-2">
                   <div className="w-2 h-2 bg-gaming-green rounded-full mt-2 flex-shrink-0" />
-                  <p>Screenshot must clearly show your rank, kills, and match details</p>
+                  <p>Screenshot must clearly show your contest participation and results</p>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="w-2 h-2 bg-gaming-blue rounded-full mt-2 flex-shrink-0" />

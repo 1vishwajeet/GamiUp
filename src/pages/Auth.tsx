@@ -56,7 +56,7 @@ const Auth = () => {
               Welcome to Gamer Place!
             </h1>
             <p className="text-muted-foreground text-lg">
-              Please login or signup to access the gaming arena and participate in challenges.
+              Please login or signup to access the GamiZn Gamer Place and participate in challenges.
             </p>
           </motion.div>
 

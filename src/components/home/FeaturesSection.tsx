@@ -55,7 +55,7 @@ const FeaturesSection = () => {
           className="text-center mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-gaming font-black text-foreground mb-6">
-            Why Choose Arena Nexus?
+            Why Choose GamiZN?
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Experience the most trusted and fair gaming platform designed for serious gamers

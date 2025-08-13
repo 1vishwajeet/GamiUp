@@ -22,12 +22,12 @@ const WinnerVerification = () => {
     submission.contestName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleApprove = (id: string) => {
-    updateWinnerStatus(id, "Approved");
-  };
-
-  const handleReject = (id: string) => {
-    updateWinnerStatus(id, "Rejected");
+  const handleDelete = async (id: string) => {
+    console.log('🗑️ Admin Delete button clicked for ID:', id);
+    console.log('🔍 Checking admin session before delete...');
+    console.log('📦 Session Storage adminAuth:', sessionStorage.getItem('adminAuth'));
+    console.log('📦 Session Storage sessionActive:', sessionStorage.getItem('admin-session-active'));
+    await updateWinnerStatus(id, "Delete");
   };
 
   const getStatusColor = (status: string) => {
@@ -61,6 +61,36 @@ const WinnerVerification = () => {
                 )}
               </div>
               <Clock className="w-8 h-8 text-yellow-500" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Approved Winners</p>
+                {loading ? (
+                  <Skeleton className="h-9 w-8" />
+                ) : (
+                  <p className="text-3xl font-gaming font-bold text-green-500">{approvedCount}</p>
+                )}
+              </div>
+              <CheckCircle className="w-8 h-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Prize Money Approved</p>
+                {loading ? (
+                  <Skeleton className="h-9 w-20" />
+                ) : (
+                  <p className="text-3xl font-gaming font-bold text-purple-500">₹{totalPrizeApproved.toLocaleString()}</p>
+                )}
+              </div>
+              <Award className="w-8 h-8 text-purple-500" />
             </div>
           </CardContent>
         </Card>
@@ -98,9 +128,7 @@ const WinnerVerification = () => {
                 <TableHead>User Name</TableHead>
                 <TableHead>User ID</TableHead>
                 <TableHead>Contest Name</TableHead>
-                <TableHead>Rank</TableHead>
-                <TableHead>Kills</TableHead>
-                <TableHead>Prize Amount</TableHead>
+                <TableHead>Expected Prize</TableHead>
                 <TableHead>Submission Time</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
@@ -124,17 +152,6 @@ const WinnerVerification = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center">
-                      <span className="font-bold">#{submission.rank}</span>
-                      {submission.rank === 1 && <span className="ml-1">🏆</span>}
-                      {submission.rank === 2 && <span className="ml-1">🥈</span>}
-                      {submission.rank === 3 && <span className="ml-1">🥉</span>}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{submission.kills} kills</Badge>
-                  </TableCell>
-                  <TableCell>
                     <span className="font-gaming font-bold text-green-500">
                       ₹{submission.prizeAmount.toLocaleString()}
                     </span>
@@ -156,8 +173,8 @@ const WinnerVerification = () => {
                     <div className="flex items-center gap-2">
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button
-                            variant="ghost"
+                          <Button 
+                            variant="ghost" 
                             size="sm"
                             onClick={() => setSelectedSubmission(submission)}
                           >
@@ -169,7 +186,7 @@ const WinnerVerification = () => {
                             <DialogHeader className="flex-shrink-0 p-4 sm:p-6 border-b">
                               <DialogTitle className="font-gaming">Winner Submission Details</DialogTitle>
                             </DialogHeader>
-
+                            
                             {selectedSubmission && (
                               <div className="flex-1 overflow-y-auto p-4 sm:p-6 min-h-0">
                                 <div className="space-y-6">
@@ -184,19 +201,11 @@ const WinnerVerification = () => {
                                       <p className="font-mono text-xs sm:text-sm break-all">{selectedSubmission.userId}</p>
                                     </div>
                                     <div>
-                                      <p className="text-sm text-muted-foreground">Contest</p>
+                                      <p className="text-sm text-muted-foreground">Contest Name</p>
                                       <p className="break-words">{selectedSubmission.contestName}</p>
                                     </div>
                                     <div>
-                                      <p className="text-sm text-muted-foreground">Rank</p>
-                                      <p className="font-bold">#{selectedSubmission.rank}</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-sm text-muted-foreground">Number of Kills</p>
-                                      <p>{selectedSubmission.kills}</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-sm text-muted-foreground">Prize Amount</p>
+                                      <p className="text-sm text-muted-foreground">Expected Prize Amount</p>
                                       <p className="font-gaming font-bold text-green-500">
                                         ₹{selectedSubmission.prizeAmount.toLocaleString()}
                                       </p>
@@ -207,8 +216,8 @@ const WinnerVerification = () => {
                                   <div>
                                     <p className="text-sm text-muted-foreground mb-3">Screenshot Proof</p>
                                     <div className="flex justify-center">
-                                      <img
-                                        src={selectedSubmission.screenshotProof}
+                                      <img 
+                                        src={selectedSubmission.screenshotProof} 
                                         alt="Winner proof screenshot"
                                         className="max-w-full max-h-[250px] sm:max-h-[350px] object-contain rounded-lg border border-border"
                                       />
@@ -219,9 +228,9 @@ const WinnerVerification = () => {
                                   {selectedSubmission.additionalNotes && (
                                     <div>
                                       <p className="text-sm text-muted-foreground mb-3">Additional Notes</p>
-                                      <Textarea
-                                        value={selectedSubmission.additionalNotes}
-                                        readOnly
+                                      <Textarea 
+                                        value={selectedSubmission.additionalNotes} 
+                                        readOnly 
                                         className="min-h-16 max-h-24 resize-none"
                                       />
                                     </div>
@@ -234,20 +243,13 @@ const WinnerVerification = () => {
                             {selectedSubmission?.status === "Pending" && (
                               <div className="flex-shrink-0 p-4 sm:p-6 border-t bg-background">
                                 <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
-                                  <Button
-                                    onClick={() => handleApprove(selectedSubmission.id)}
-                                    className="w-full sm:w-auto bg-green-500 hover:bg-green-600"
-                                  >
-                                    <CheckCircle className="w-4 h-4 mr-2" />
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    onClick={() => handleReject(selectedSubmission.id)}
+                                  <Button 
+                                    onClick={() => handleDelete(selectedSubmission.id)}
                                     variant="destructive"
                                     className="w-full sm:w-auto"
                                   >
                                     <XCircle className="w-4 h-4 mr-2" />
-                                    Reject
+                                    Delete
                                   </Button>
                                 </div>
                               </div>
@@ -257,24 +259,14 @@ const WinnerVerification = () => {
                       </Dialog>
 
                       {submission.status === "Pending" && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-green-500 hover:text-green-600"
-                            onClick={() => handleApprove(submission.id)}
-                          >
-                            <CheckCircle className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-500 hover:text-red-600"
-                            onClick={() => handleReject(submission.id)}
-                          >
-                            <XCircle className="w-4 h-4" />
-                          </Button>
-                        </>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="text-red-500 hover:text-red-600"
+                          onClick={() => handleDelete(submission.id)}
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </Button>
                       )}
                     </div>
                   </TableCell>

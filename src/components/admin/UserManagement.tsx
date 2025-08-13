@@ -271,7 +271,12 @@ const UserManagement = ({}: UserManagementProps) => {
                                     ₹{(selectedUser.total_winnings || 0).toLocaleString()}
                                   </p>
                                 </div>
-                                
+                                <div>
+                                  <p className="text-sm text-muted-foreground">Wallet Balance</p>
+                                  <p className="font-gaming font-bold text-blue-500">
+                                    ₹{(selectedUser.wallet_balance || 0).toLocaleString()}
+                                  </p>
+                                </div>
                               </div>
                             </div>
                           )}

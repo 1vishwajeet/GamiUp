@@ -20,7 +20,6 @@ const Footer = () => {
       <div className="absolute inset-0 bg-gradient-to-br from-gaming-purple/10 via-gaming-blue/5 to-gaming-cyan/10" />
 
       <div className="container mx-auto px-6 relative z-10">
-
         {/* Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           {/* Brand */}
@@ -46,76 +45,80 @@ const Footer = () => {
             <ul className="space-y-3">
               <li><a href="/#how-it-works" className="text-muted-foreground hover:text-gaming-cyan transition-colors">How it Works</a></li>
               <li><a href="/#challenges" className="text-muted-foreground hover:text-gaming-cyan transition-colors">Games</a></li>
-              <li><a href="#" className="text-muted-foreground hover:text-gaming-cyan transition-colors">Pricing</a></li>
               <li><a href="/#leaderboard" className="text-muted-foreground hover:text-gaming-cyan transition-colors">Leaderboard</a></li>
             </ul>
           </div>
 
-          {/* Support */}
-          <div className="space-y-6">
-            <h3 className="font-gaming font-bold text-foreground text-lg">Support</h3>
-            <ul className="space-y-3">
-              <li><a href="#" className="text-muted-foreground hover:text-gaming-cyan transition-colors">Help Center</a></li>
-              <li><a href="#" className="text-muted-foreground hover:text-gaming-cyan transition-colors">Contact Us</a></li>
-              <li><a href="#" className="text-muted-foreground hover:text-gaming-cyan transition-colors">Fair Play</a></li>
-              <li><a href="#" className="text-muted-foreground hover:text-gaming-cyan transition-colors">Verification</a></li>
-            </ul>
-          </div>
+          {/* Contact and Social Media */}
+          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-12">
+            {/* Contact */}
+            <div className="space-y-6">
+              <h3 className="font-gaming font-bold text-foreground text-lg">Contact</h3>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 text-muted-foreground">
+                  <Mail className="w-5 h-5 text-gaming-cyan" />
+                  <a
+                    href="mailto:vishwajeeet0994@gmail.com"
+                    className="hover:underline"
+                  >
+                    vishwajeeet0994@gmail.com
+                  </a>
+                </div>
+                <div className="flex items-center gap-3 text-muted-foreground">
+                  <Phone className="w-5 h-5 text-gaming-cyan" />
+                  <a
+                    href="tel:+919717678419"
+                    className="hover:underline"
+                  >
+                    +91 97176 78419
+                  </a>
+                </div>
+                <div className="flex items-center gap-3 text-muted-foreground">
+                  <MapPin className="w-5 h-5 text-gaming-cyan" />
+                  <span>Delhi, India</span>
+                </div>
+              </div>
+            </div>
 
-          {/* Contact */}
-          <div className="space-y-6">
-            <h3 className="font-gaming font-bold text-foreground text-lg">Contact</h3>
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 text-muted-foreground">
-                <Mail className="w-5 h-5 text-gaming-cyan" />
-                <span>vishwajeeet0994@gmail.com</span>
-              </div>
-              <div className="flex items-center gap-3 text-muted-foreground">
-                <Phone className="w-5 h-5 text-gaming-cyan" />
-                <span>+91 97176 78419</span>
-              </div>
-              <div className="flex items-center gap-3 text-muted-foreground">
-                <MapPin className="w-5 h-5 text-gaming-cyan" />
-                <span>Delhi, India</span>
+            {/* Social Media */}
+            <div className="space-y-6">
+              <h3 className="font-gaming font-bold text-foreground text-lg">Our Social Media</h3>
+              <div className="space-y-4">
+                {/* Reddit */}
+                <a
+                  href="#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 text-muted-foreground hover:text-red-500 transition-colors"
+                >
+                  <FaReddit className="text-3xl" />
+                  <span className="font-medium">Reddit</span>
+                </a>
+
+                {/* Discord */}
+                <a
+                  href="#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 text-muted-foreground hover:text-indigo-400 transition-colors"
+                >
+                  <FaDiscord className="text-3xl" />
+                  <span className="font-medium">Discord</span>
+                </a>
+
+                {/* Twitch */}
+                <a
+                  href="#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 text-muted-foreground hover:text-purple-500 transition-colors"
+                >
+                  <FaTwitch className="text-3xl" />
+                  <span className="font-medium">Twitch</span>
+                </a>
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Social Icons */}
-        <div className="w-full flex justify-center mt-10 mb-0 gap-10">
-          {/* Reddit */}
-          <a
-            href="#"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-col items-center text-white hover:text-red-500 transition-transform transform hover:scale-110 hover:drop-shadow-glow"
-          >
-            <FaReddit className="text-4xl" />
-            <span className="mt-1 text-sm font-medium">Reddit</span>
-          </a>
-
-          {/* Discord */}
-          <a
-            href="#"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-col items-center text-white hover:text-indigo-400 transition-transform transform hover:scale-110 hover:drop-shadow-glow"
-          >
-            <FaDiscord className="text-4xl" />
-            <span className="mt-1 text-sm font-medium">Discord</span>
-          </a>
-
-          {/* Twitch */}
-          <a
-            href="#"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-col items-center text-white hover:text-purple-500 transition-transform transform hover:scale-110 hover:drop-shadow-glow"
-          >
-            <FaTwitch className="text-4xl" />
-            <span className="mt-1 text-sm font-medium">Twitch</span>
-          </a>
         </div>
 
         {/* Bottom Section */}
@@ -124,10 +127,10 @@ const Footer = () => {
             © 2025 GameZN. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm">
-            <a href="#" className="text-muted-foreground hover:text-gaming-cyan transition-colors">Terms of Service</a>
-            <a href="#" className="text-muted-foreground hover:text-gaming-cyan transition-colors">Privacy Policy</a>
-            <a href="#" className="text-muted-foreground hover:text-gaming-cyan transition-colors">Refund Policy</a>
-            <a href="#" className="text-muted-foreground hover:text-gaming-cyan transition-colors">Community Guidelines</a>
+            <span className="text-muted-foreground hover:text-gaming-cyan transition-colors">Terms of Service</span>
+            <span className="text-muted-foreground hover:text-gaming-cyan transition-colors">Privacy Policy</span>
+            <span className="text-muted-foreground hover:text-gaming-cyan transition-colors">Refund Policy</span>
+            <span className="text-muted-foreground hover:text-gaming-cyan transition-colors">Community Guidelines</span>
           </div>
         </div>
       </div>

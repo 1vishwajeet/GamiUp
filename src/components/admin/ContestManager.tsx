@@ -314,7 +314,7 @@ const ContestManager = ({}: ContestManagerProps) => {
                   Add Contest
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto ">
                 <DialogHeader>
                   <DialogTitle className="font-gaming">Create New Contest</DialogTitle>
                 </DialogHeader>
@@ -450,13 +450,13 @@ const ContestManager = ({}: ContestManagerProps) => {
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
+                      <div className="space-y-2 ">
                         <Label>Start Date & Time</Label>
                         <Input
                           type="datetime-local"
                           value={newContest.start_date}
                           onChange={(e) => setNewContest({...newContest, start_date: e.target.value})}
-                          className="w-full"
+                          className="w-full bg-green-500 text-black"
                         />
                       </div>
                       <div className="space-y-2">
@@ -465,7 +465,7 @@ const ContestManager = ({}: ContestManagerProps) => {
                           type="datetime-local"
                           value={newContest.end_date}
                           onChange={(e) => setNewContest({...newContest, end_date: e.target.value})}
-                          className="w-full"
+                          className="w-full bg-green-500 text-black"
                         />
                       </div>
                     </div>

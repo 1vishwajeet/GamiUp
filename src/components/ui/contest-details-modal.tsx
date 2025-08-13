@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, Users, Trophy, Calendar, MapPin, Award, Target, X } from "lucide-react";
 
+
 interface Contest {
   id: string;
   title: string;
@@ -19,6 +20,9 @@ interface Contest {
   image_url: string;
   status: string;
   contest_participants?: { count: number }[];
+  created_by?: string;
+  creator_profile?: { name: string; whatsapp_number: string };
+  challenge_type?: string;
 }
 
 interface ContestDetailsModalProps {
@@ -39,6 +43,7 @@ export const ContestDetailsModal = ({
   isUserJoined = false
 }: ContestDetailsModalProps) => {
   if (!contest) return null;
+
 
   const getTimeLeft = (startDate: string, endDate: string) => {
     const now = new Date();
@@ -74,13 +79,14 @@ export const ContestDetailsModal = ({
   const timeLeft = getTimeLeft(contest.start_date, contest.end_date);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('en-IN', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'Asia/Kolkata'
     });
   };
 
@@ -106,26 +112,39 @@ export const ContestDetailsModal = ({
 
         <div className="p-4 sm:p-6 space-y-6">
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
-          {/* Contest Image */}
-          <div className="relative">
-            <img 
-              src={contest.image_url ? (contest.image_url.startsWith('data:') ? contest.image_url : `${contest.image_url}?t=${Date.now()}`) : "/placeholder.svg?height=300&width=400&text=" + encodeURIComponent(contest.game)}
-              alt={contest.title}
-              className="w-full h-48 sm:h-64 object-cover rounded-xl"
-            />
-            <div className="absolute top-2 sm:top-4 left-2 sm:left-4">
-              <Badge 
-                variant={status === "ACTIVE" ? "default" : "secondary"}
-                className={`${status === "ACTIVE" ? "bg-gaming-green" : status === "UPCOMING" ? "bg-gaming-purple" : "bg-gray-500"} text-white border-0 text-xs sm:text-sm`}
-              >
-                {status}
-              </Badge>
+        <div className={`grid gap-4 sm:gap-6 ${contest.created_by ? 'grid-cols-1' : 'grid-cols-1 xl:grid-cols-2'}`}>
+          {/* Contest Image - Only show for admin contests */}
+          {!contest.created_by && (
+            <div className="relative">
+              <img 
+                src={contest.image_url ? (contest.image_url.startsWith('data:') ? contest.image_url : `${contest.image_url}?t=${Date.now()}`) : '/placeholder.svg'}
+                alt={contest.title}
+                className="w-full h-48 sm:h-64 object-cover rounded-xl"
+              />
+              <div className="absolute top-2 sm:top-4 left-2 sm:left-4">
+                <Badge 
+                  variant={status === "ACTIVE" ? "default" : "secondary"}
+                  className={`${status === "ACTIVE" ? "bg-gaming-green" : status === "UPCOMING" ? "bg-gaming-purple" : "bg-gray-500"} text-white border-0 text-xs sm:text-sm`}
+                >
+                  {status}
+                </Badge>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Contest Info */}
           <div className="space-y-3 sm:space-y-4">
+            {/* Status badge for custom contests */}
+            {contest.created_by && (
+              <div className="flex justify-start">
+                <Badge 
+                  variant={status === "ACTIVE" ? "default" : "secondary"}
+                  className={`${status === "ACTIVE" ? "bg-gaming-green" : status === "UPCOMING" ? "bg-gaming-purple" : "bg-gray-500"} text-white border-0 text-xs sm:text-sm`}
+                >
+                  {status}
+                </Badge>
+              </div>
+            )}
             <div>
               <h3 className="text-lg sm:text-xl font-gaming font-bold text-foreground mb-2">
                 {contest.title}
@@ -138,7 +157,29 @@ export const ContestDetailsModal = ({
             <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
               <MapPin className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="font-medium text-gaming-blue">{contest.game}</span>
+              {contest.challenge_type && (
+                <>
+                  <span className="text-muted-foreground">•</span>
+                  <Badge variant="secondary" className="text-xs px-2 py-1 bg-gaming-purple/20 text-gaming-purple border-gaming-purple/30">
+                    {contest.challenge_type}
+                  </Badge>
+                </>
+              )}
             </div>
+
+            {contest.created_by && contest.creator_profile && (
+              <div className="flex flex-col gap-1 text-xs sm:text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span>Created by:</span>
+                  <span className="font-medium text-gaming-orange">{contest.creator_profile.name}</span>
+                </div>
+                <div className="flex items-center gap-2 ml-6">
+                  <span>Contact:</span>
+                  <span className="font-medium text-gaming-green">{contest.creator_profile.whatsapp_number}</span>
+                </div>
+              </div>
+            )}
 
             {/* Prize and Entry Fee */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -211,35 +252,52 @@ export const ContestDetailsModal = ({
             <Award className="w-4 h-4 sm:w-5 sm:h-5 text-gaming-orange" />
             Prize Distribution
           </h4>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-            <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-600/10 rounded-xl p-3 sm:p-4 border border-yellow-500/20">
-              <div className="text-center">
-                <div className="text-xl sm:text-2xl font-bold text-yellow-500 mb-1">🥇</div>
-                <div className="text-xs sm:text-sm text-muted-foreground mb-1">1st Place</div>
-                <div className="text-sm sm:text-lg font-gaming font-bold text-yellow-500">
-                  ₹{contest.first_prize ? Number(contest.first_prize).toLocaleString() : Math.floor(Number(contest.prize_pool) * 0.5).toLocaleString()}
+          
+          {contest.created_by ? (
+            // Show only 1st prize for custom challenges
+            <div className="flex justify-center">
+              <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-600/10 rounded-xl p-4 sm:p-6 border border-yellow-500/20 max-w-xs w-full">
+                <div className="text-center">
+                  <div className="text-3xl sm:text-4xl font-bold text-yellow-500 mb-2">🥇</div>
+                  <div className="text-sm sm:text-base text-muted-foreground mb-2">Winner Prize</div>
+                  <div className="text-lg sm:text-2xl font-gaming font-bold text-yellow-500">
+                    ₹{contest.first_prize ? Number(contest.first_prize).toLocaleString() : Number(contest.prize_pool).toLocaleString()}
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-gray-400/10 to-gray-500/10 rounded-xl p-3 sm:p-4 border border-gray-400/20">
-              <div className="text-center">
-                <div className="text-xl sm:text-2xl font-bold text-gray-400 mb-1">🥈</div>
-                <div className="text-xs sm:text-sm text-muted-foreground mb-1">2nd Place</div>
-                <div className="text-sm sm:text-lg font-gaming font-bold text-gray-400">
-                  ₹{contest.second_prize ? Number(contest.second_prize).toLocaleString() : Math.floor(Number(contest.prize_pool) * 0.3).toLocaleString()}
+          ) : (
+            // Show all three prizes for regular contests
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+              <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-600/10 rounded-xl p-3 sm:p-4 border border-yellow-500/20">
+                <div className="text-center">
+                  <div className="text-xl sm:text-2xl font-bold text-yellow-500 mb-1">🥇</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground mb-1">1st Place</div>
+                  <div className="text-sm sm:text-lg font-gaming font-bold text-yellow-500">
+                    ₹{contest.first_prize ? Number(contest.first_prize).toLocaleString() : Math.floor(Number(contest.prize_pool) * 0.5).toLocaleString()}
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gradient-to-br from-gray-400/10 to-gray-500/10 rounded-xl p-3 sm:p-4 border border-gray-400/20">
+                <div className="text-center">
+                  <div className="text-xl sm:text-2xl font-bold text-gray-400 mb-1">🥈</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground mb-1">2nd Place</div>
+                  <div className="text-sm sm:text-lg font-gaming font-bold text-gray-400">
+                    ₹{contest.second_prize ? Number(contest.second_prize).toLocaleString() : Math.floor(Number(contest.prize_pool) * 0.3).toLocaleString()}
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gradient-to-br from-amber-600/10 to-amber-700/10 rounded-xl p-3 sm:p-4 border border-amber-600/20">
+                <div className="text-center">
+                  <div className="text-xl sm:text-2xl font-bold text-amber-600 mb-1">🥉</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground mb-1">3rd Place</div>
+                  <div className="text-sm sm:text-lg font-gaming font-bold text-amber-600">
+                    ₹{contest.third_prize ? Number(contest.third_prize).toLocaleString() : Math.floor(Number(contest.prize_pool) * 0.2).toLocaleString()}
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="bg-gradient-to-br from-amber-600/10 to-amber-700/10 rounded-xl p-3 sm:p-4 border border-amber-600/20">
-              <div className="text-center">
-                <div className="text-xl sm:text-2xl font-bold text-amber-600 mb-1">🥉</div>
-                <div className="text-xs sm:text-sm text-muted-foreground mb-1">3rd Place</div>
-                <div className="text-sm sm:text-lg font-gaming font-bold text-amber-600">
-                  ₹{contest.third_prize ? Number(contest.third_prize).toLocaleString() : Math.floor(Number(contest.prize_pool) * 0.2).toLocaleString()}
-                </div>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Action Buttons */}

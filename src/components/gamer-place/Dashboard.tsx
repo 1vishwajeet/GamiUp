@@ -4,11 +4,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Trophy,
-  Gamepad2,
-  Settings,
-  LogOut,
+import { 
+  Trophy, 
+  Gamepad2, 
+  Settings, 
+  LogOut, 
   User,
   Star,
   Target,
@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import UserDashboardModal from "./UserDashboardModal";
 import UploadResultsSection from "./UploadResultsSection";
 import LiveChallengesSection from "./LiveChallengesSection";
+import CreateCustomChallengeSection from "./CreateCustomChallengeSection";
 
 const Dashboard = () => {
   const { userProfile, logout, loading } = useAuth();
@@ -66,7 +67,6 @@ const Dashboard = () => {
     );
   }
 
-
   const cards = [
     {
       title: "Rise. Grind. Win.",
@@ -89,13 +89,11 @@ const Dashboard = () => {
   ];
 
 
-
-
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Full Background Image */}
       <div className="absolute inset-0 z-0">
-        <div
+        <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage: `url('/lovable-uploads/9489101.jpg')`
@@ -110,38 +108,39 @@ const Dashboard = () => {
       <div className="relative z-10">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-gaming-purple to-gaming-blue rounded-full flex items-center justify-center">
-                <User className="w-8 h-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-gaming font-bold text-white">
-                  Welcome, {userProfile.name}😍
-                </h1>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowUserModal(true)}
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-              >
-                <Settings className="w-4 h-4 mr-2" />
-                Profile
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleLogout}
-                className="bg-red-500/20 border-red-500/30 text-red-300 hover:bg-red-500/30"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          </div>
+<div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+  {/* Left Section: Icon + Welcome Text */}
+  <div className="flex items-center gap-3">
+    
+    <h1 className="text-[28px] sm:text-4xl font-gaming font-bold text-white flex items-center gap-2">
+      Welcome, <span className="text-gaming-orange">{userProfile.name}</span>
+    </h1>
+  </div>
+
+  {/* Right Section: Profile + Logout */}
+  <div className="flex gap-2">
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => setShowUserModal(true)}
+      className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+    >
+      <Settings className="w-4 h-4 mr-2" />
+      Profile
+    </Button>
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleLogout}
+      className="bg-red-500/20 border-red-500/30 text-red-300 hover:bg-red-500/30"
+    >
+      <LogOut className="w-4 h-4 mr-2" />
+      Logout
+    </Button>
+  </div>
+</div>
+
+
 
           {/* Motivational Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 ">
@@ -158,9 +157,11 @@ const Dashboard = () => {
             ))}
           </div>
 
-
           {/* Live Challenges Section */}
           <LiveChallengesSection />
+
+          {/* Create Custom Challenge Section */}
+          <CreateCustomChallengeSection />
 
           {/* Upload Results Section */}
           <UploadResultsSection />
@@ -197,5 +198,6 @@ const Dashboard = () => {
     </div>
   );
 };
+
 
 export default Dashboard;

@@ -122,15 +122,14 @@ const Footer = () => {
         </div>
 
         {/* Bottom Section */}
-        <div className="border-t border-white/10 mt-5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="border-t border-white/10 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-muted-foreground">
-            © 2025 GameZN. All rights reserved.
+            © 2024 GameArena. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm">
-            <span className="text-muted-foreground hover:text-gaming-cyan transition-colors">Terms of Service</span>
-            <span className="text-muted-foreground hover:text-gaming-cyan transition-colors">Privacy Policy</span>
-            <span className="text-muted-foreground hover:text-gaming-cyan transition-colors">Refund Policy</span>
-            <span className="text-muted-foreground hover:text-gaming-cyan transition-colors">Community Guidelines</span>
+            <a href="/terms" className="text-muted-foreground hover:text-gaming-cyan transition-colors">Terms of Service</a>
+            <a href="/privacy" className="text-muted-foreground hover:text-gaming-cyan transition-colors">Privacy Policy</a>
+            <a href="/refund" className="text-muted-foreground hover:text-gaming-cyan transition-colors">Refund Policy</a>
           </div>
         </div>
       </div>

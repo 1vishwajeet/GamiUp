@@ -10,6 +10,9 @@ import Auth from "./pages/Auth";
 import GamerPlace from "./pages/GamerPlace";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import RefundPolicy from "./pages/RefundPolicy";
 import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
@@ -36,6 +39,9 @@ const App = () => (
                 <Admin />
               </ProtectedAdminRoute>
             } />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/refund" element={<RefundPolicy />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

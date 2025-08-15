@@ -124,7 +124,7 @@ const Footer = () => {
         {/* Bottom Section */}
         <div className="border-t border-white/10 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-muted-foreground">
-            © 2024 GameArena. All rights reserved.
+            © 2024 GamiZN. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm">
             <a href="/terms" className="text-muted-foreground hover:text-gaming-cyan transition-colors">Terms of Service</a>

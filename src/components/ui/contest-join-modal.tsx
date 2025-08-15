@@ -86,7 +86,7 @@ export function ContestJoinModal({ contest, isOpen, onClose, userProfile, onJoin
         key: data.razorpay_key_id,
         amount: data.amount,
         currency: data.currency,
-        name: "Match Arena Kings",
+        name: "GamiZN",
         description: `Entry fee for ${contest.title}`,
         order_id: data.order_id,
         handler: function (response: any) {

@@ -58,6 +58,7 @@ const CreateCustomChallengeSection = () => {
   ];
 
   const challengeTypeOptions = [
+    { value: "1v1", label: "1v1" },
     { value: "2v2", label: "2v2" },
     { value: "3v3", label: "3v3" },
     { value: "4v4", label: "4v4" }
@@ -72,8 +73,8 @@ const CreateCustomChallengeSection = () => {
     // Auto-calculate prize amount when entry fee changes
     if (field === 'entryFee') {
       const fee = Number(value);
-      // Prize pool = 2 players * entry fee - small platform fee (10%)
-      const prizePool = (2 * fee) * 0.9;
+      // Prize pool = 2 players * entry fee - small platform fee (2%)
+      const prizePool = (2 * fee) * 0.98;
       setFormData(prev => ({
         ...prev,
         prizeAmount: Math.round(prizePool)
@@ -197,7 +198,7 @@ const CreateCustomChallengeSection = () => {
         key: orderData.razorpay_key_id || 'rzp_live_1DP5mmOlF5G5ag',
         amount: formData.entryFee * 100, // Razorpay expects amount in paise
         currency: 'INR',
-        name: 'Gaming Platform',
+        name: 'GamiZN',
         description: `Create Custom Challenge: ${formData.title}`,
         order_id: orderData.razorpay_order_id,
         handler: async function (response: any) {
@@ -407,7 +408,7 @@ const CreateCustomChallengeSection = () => {
                       readOnly
                       className="bg-white/5 border-white/10 text-white/70 cursor-not-allowed"
                     />
-                    <p className="text-xs text-white/50 mt-1">Auto-calculated: 90% of total entry fees</p>
+                    <p className="text-xs text-white/50 mt-1">Auto-calculated: 98% of total entry fees</p>
                   </div>
 
                   {/* Timing */}
@@ -468,7 +469,7 @@ const CreateCustomChallengeSection = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                   <div className="text-center">
                     <p className="text-white/70">Max Participants</p>
-                    <p className="text-gaming-cyan font-bold">2 Players(2v2) / 2 Teams(3v3 or 4v4)</p>
+                    <p className="text-gaming-cyan font-bold">2 Players (1v1) / 2 Teams(2v2 or 3v3 or 4v4)</p>
                   </div>
                   <div className="text-center">
                     <p className="text-white/70">Entry Fee Each</p>

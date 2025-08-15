@@ -50,6 +50,19 @@ export function ContestJoinModal({ contest, isOpen, onClose, userProfile, onJoin
 
     setIsProcessing(true);
     try {
+      // Ensure Razorpay script is loaded
+      if (!(window as any).Razorpay) {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        document.head.appendChild(script);
+        
+        await new Promise((resolve, reject) => {
+          script.onload = resolve;
+          script.onerror = reject;
+        });
+      }
+
       // Create Razorpay order
       const { data, error } = await supabase.functions.invoke('create-payment-order', {
         body: {
@@ -61,7 +74,14 @@ export function ContestJoinModal({ contest, isOpen, onClose, userProfile, onJoin
 
       if (error) throw error;
 
-      // Open Razorpay checkout
+      // Close the parent modal completely to avoid backdrop conflicts
+      onClose();
+      setIsProcessing(false);
+
+      // Wait a bit for modal to close completely
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Open Razorpay checkout with enhanced options
       const options = {
         key: data.razorpay_key_id,
         amount: data.amount,
@@ -83,13 +103,53 @@ export function ContestJoinModal({ contest, isOpen, onClose, userProfile, onJoin
         },
         modal: {
           ondismiss: function() {
-            setIsProcessing(false);
+            // Do nothing on dismiss since parent modal is already closed
+          },
+          escape: true,
+          animation: true,
+          confirm_close: false
+        },
+        config: {
+          display: {
+            blocks: {
+              banks: {
+                name: 'Most Used Methods',
+                instruments: [
+                  {
+                    method: 'upi'
+                  },
+                  {
+                    method: 'card'
+                  },
+                  {
+                    method: 'netbanking'
+                  }
+                ]
+              }
+            },
+            sequence: ['block.banks'],
+            preferences: {
+              show_default_blocks: true
+            }
           }
         }
       };
 
       const razorpay = new (window as any).Razorpay(options);
+      
+      // Add event listeners for better handling
+      razorpay.on('payment.failed', function (response: any) {
+        console.error('Payment failed:', response.error);
+        toast({
+          title: "Payment Failed",
+          description: response.error.description || "Payment failed. Please try again.",
+          variant: "destructive",
+        });
+      });
+
+      // Open Razorpay immediately
       razorpay.open();
+      
     } catch (error: any) {
       console.error('Payment initiation error:', error);
       toast({

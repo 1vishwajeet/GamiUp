@@ -22,6 +22,7 @@ import UserDashboardModal from "./UserDashboardModal";
 import UploadResultsSection from "./UploadResultsSection";
 import LiveChallengesSection from "./LiveChallengesSection";
 import CreateCustomChallengeSection from "./CreateCustomChallengeSection";
+import Footer from "@/components/layout/Footer";
 
 const Dashboard = () => {
   const { userProfile, logout, loading } = useAuth();
@@ -192,6 +193,11 @@ const Dashboard = () => {
 
 
         </div>
+      </div>
+
+      {/* Footer */}
+      <div className="relative z-10">
+        <Footer />
       </div>
 
       {showUserModal && <UserDashboardModal onClose={() => setShowUserModal(false)} />}

@@ -119,7 +119,7 @@ serve(async (req) => {
           '9999999999'
       },
       order_meta: {
-        return_url: `https://www.gamizn.in/gamer-place?payment=success`,
+        return_url: `https://www.gamizn.com/gamer-place?payment=success`,
         notify_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/verify-payment`
       },
       order_note: `Contest ${contestId} payment by ${user.id}`

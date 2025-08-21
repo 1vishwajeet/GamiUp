@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -216,36 +216,36 @@ export type Database = {
       custom_contest_payments: {
         Row: {
           amount: number
+          cashfree_order_id: string | null
+          cashfree_payment_id: string | null
           contest_id: string | null
           created_at: string | null
           currency: string | null
           id: string
-          razorpay_order_id: string | null
-          razorpay_payment_id: string | null
           status: string | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           amount: number
+          cashfree_order_id?: string | null
+          cashfree_payment_id?: string | null
           contest_id?: string | null
           created_at?: string | null
           currency?: string | null
           id?: string
-          razorpay_order_id?: string | null
-          razorpay_payment_id?: string | null
           status?: string | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           amount?: number
+          cashfree_order_id?: string | null
+          cashfree_payment_id?: string | null
           contest_id?: string | null
           created_at?: string | null
           currency?: string | null
           id?: string
-          razorpay_order_id?: string | null
-          razorpay_payment_id?: string | null
           status?: string | null
           updated_at?: string | null
           user_id?: string
@@ -293,39 +293,39 @@ export type Database = {
       payments: {
         Row: {
           amount: number
+          cashfree_order_id: string | null
+          cashfree_payment_id: string | null
           contest_id: string
           created_at: string | null
           currency: string | null
           id: string
           participant_id: string | null
-          razorpay_order_id: string | null
-          razorpay_payment_id: string | null
           status: string | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           amount: number
+          cashfree_order_id?: string | null
+          cashfree_payment_id?: string | null
           contest_id: string
           created_at?: string | null
           currency?: string | null
           id?: string
           participant_id?: string | null
-          razorpay_order_id?: string | null
-          razorpay_payment_id?: string | null
           status?: string | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           amount?: number
+          cashfree_order_id?: string | null
+          cashfree_payment_id?: string | null
           contest_id?: string
           created_at?: string | null
           currency?: string | null
           id?: string
           participant_id?: string | null
-          razorpay_order_id?: string | null
-          razorpay_payment_id?: string | null
           status?: string | null
           updated_at?: string | null
           user_id?: string
@@ -478,158 +478,158 @@ export type Database = {
       get_admin_contest_participants: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          user_id: string
           contest_id: string
-          transaction_id: string
+          game_id: string
+          id: string
+          is_winner: boolean
+          joined_at: string
           payment_id: string
           payment_status: string
-          joined_at: string
-          score: number
-          result_screenshot: string
-          is_winner: boolean
           prize_amount: number
-          game_id: string
+          result_screenshot: string
+          score: number
+          transaction_id: string
+          user_id: string
         }[]
       }
       get_admin_contests: {
         Args: { contest_ids: string[] }
         Returns: {
+          entry_fee: number
+          game: string
           id: string
           title: string
-          game: string
-          entry_fee: number
         }[]
       }
       get_admin_contests_full: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          title: string
-          description: string
-          game: string
-          entry_fee: number
-          prize_pool: number
-          first_prize: number
-          second_prize: number
-          third_prize: number
-          max_participants: number
-          start_date: string
-          end_date: string
-          status: string
-          image_url: string
           created_at: string
           created_by: string
+          description: string
+          end_date: string
+          entry_fee: number
+          first_prize: number
+          game: string
+          id: string
+          image_url: string
+          max_participants: number
           participant_count: number
+          prize_pool: number
+          second_prize: number
+          start_date: string
+          status: string
+          third_prize: number
+          title: string
         }[]
       }
       get_admin_custom_challenges: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          title: string
-          description: string
-          game: string
-          entry_fee: number
-          first_prize: number
-          second_prize: number
-          third_prize: number
-          max_participants: number
-          start_date: string
-          end_date: string
-          status: string
+          challenge_type: string
           created_at: string
           created_by: string
-          creator_name: string
           creator_contact: string
+          creator_name: string
+          description: string
+          end_date: string
+          entry_fee: number
+          first_prize: number
+          game: string
+          id: string
+          max_participants: number
           participant_count: number
           payment_status: string
-          challenge_type: string
+          second_prize: number
+          start_date: string
+          status: string
+          third_prize: number
+          title: string
         }[]
       }
       get_admin_dashboard_stats: {
         Args: Record<PropertyKey, never>
         Returns: {
-          total_users: number
-          total_contests: number
           active_contests: number
-          total_entries: number
-          new_users_today: number
           contests_created_today: number
+          new_users_today: number
           payments_processed_today: number
+          total_contests: number
+          total_entries: number
+          total_users: number
         }[]
       }
       get_admin_profiles: {
         Args: { user_ids: string[] }
         Returns: {
-          user_id: string
           name: string
+          user_id: string
           whatsapp_number: string
         }[]
       }
       get_admin_users_full: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          user_id: string
-          name: string
-          email: string
-          username: string
-          whatsapp_number: string
-          wallet_balance: number
-          games_played: number
-          total_winnings: number
-          favorite_game: string
-          skill_level: string
           achievements: string[]
           created_at: string
+          email: string
+          favorite_game: string
+          games_played: number
+          id: string
+          name: string
+          skill_level: string
+          total_winnings: number
           updated_at: string
+          user_id: string
+          username: string
+          wallet_balance: number
+          whatsapp_number: string
         }[]
       }
       get_admin_winner_submissions: {
         Args: Record<PropertyKey, never>
         Returns: {
-          id: string
-          user_id: string
-          contest_id: string
-          score: number
-          result_screenshot: string
           additional_notes: string
-          is_winner: boolean
-          prize_amount: number
-          joined_at: string
-          user_name: string
+          contest_id: string
+          contest_name: string
           contest_title: string
+          expected_prize_amount: number
           first_prize: number
+          id: string
+          is_winner: boolean
+          joined_at: string
+          prize_amount: number
+          result_screenshot: string
+          score: number
           second_prize: number
           third_prize: number
-          contest_name: string
-          expected_prize_amount: number
+          user_id: string
+          user_name: string
         }[]
       }
       get_custom_challenge_participants: {
         Args: { challenge_id: string }
         Returns: {
-          id: string
-          user_id: string
           contest_id: string
-          transaction_id: string
+          game_id: string
+          id: string
+          is_winner: boolean
+          joined_at: string
           payment_id: string
           payment_status: string
-          joined_at: string
-          score: number
-          result_screenshot: string
-          is_winner: boolean
           prize_amount: number
-          game_id: string
-          user_name: string
+          result_screenshot: string
+          score: number
+          transaction_id: string
           user_contact: string
+          user_id: string
+          user_name: string
         }[]
       }
       has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["user_role"]
+          _user_id: string
         }
         Returns: boolean
       }

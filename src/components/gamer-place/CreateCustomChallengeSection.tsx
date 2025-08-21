@@ -286,6 +286,30 @@ const CreateCustomChallengeSection = () => {
         throw new Error(orderError.message);
       }
 
+      console.log('✅ create-custom-contest-payment response:', orderData);
+      if (orderData?.success === false) {
+        console.error('❌ Custom payment init error:', orderData);
+        toast({
+          title: 'Payment Setup Error',
+          description: typeof orderData.details === 'string' ? orderData.details : (orderData.details?.message || orderData.error || 'Payment could not be initiated.'),
+          variant: 'destructive',
+        });
+        setIsLoading(false);
+        return;
+      }
+      const sessionId = (orderData?.payment_session_id ?? '').toString().trim();
+      console.log('🧪 payment_session_id length:', sessionId.length, 'preview:', sessionId.slice(0,8) + '...');
+      if (!sessionId) {
+        console.error('❌ Missing payment_session_id in response:', orderData);
+        toast({
+          title: 'Payment Setup Error',
+          description: 'Payment session not received. Please try again.',
+          variant: 'destructive',
+        });
+        setIsLoading(false);
+        return;
+      }
+
       // Persist order and form data for post-redirect verification
       try {
         localStorage.setItem('cf_cashfree_order_id', orderData.cashfree_order_id);
@@ -307,7 +331,7 @@ const CreateCustomChallengeSection = () => {
 
       // Initialize Cashfree Checkout
       const cashfree = (window as any).Cashfree({
-        mode: "sandbox" // Change to "production" for live
+        mode: "production"
       });
 
       // Store payment data for post-redirect verification

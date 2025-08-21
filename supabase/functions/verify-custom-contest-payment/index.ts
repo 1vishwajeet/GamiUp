@@ -1,12 +1,13 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const CF_BASE_URL = (() => {
+const CF_BASE_URLS = (() => {
   const env = (Deno.env.get('CASHFREE_ENV') || 'sandbox').toLowerCase();
   const isProduction = env === 'live' || env === 'prod' || env === 'production';
-  const baseUrl = isProduction ? 'https://api.cashfree.com' : 'https://sandbox.cashfree.com';
-  console.log(`🚀 Cashfree Environment: ${env}, Is Production: ${isProduction}, Base URL: ${baseUrl}`);
-  return baseUrl;
+  const primary = isProduction ? 'https://api.cashfree.com' : 'https://sandbox.cashfree.com';
+  const fallback = isProduction ? 'https://sandbox.cashfree.com' : 'https://api.cashfree.com';
+  console.log(`🚀 Cashfree Environment: ${env}, Is Production: ${isProduction}, Primary URL: ${primary}, Fallback URL: ${fallback}`);
+  return [primary, fallback];
 })();
 
 const corsHeaders = {
@@ -70,7 +71,7 @@ serve(async (req) => {
     // Get the payment record to find the user_id
     let paymentQuery = supabaseClient
       .from('custom_contest_payments')
-      .select('user_id, amount')
+      .select('user_id, amount, contest_id, status')
       .eq('cashfree_order_id', cashfree_order_id);
     
     // If authenticated call, also filter by user_id for security
@@ -90,7 +91,12 @@ serve(async (req) => {
     const cashfreeAppId = Deno.env.get('CASHFREE_APP_ID_NEW') || Deno.env.get('CASHFREE_APP_ID');
     const cashfreeSecretKey = Deno.env.get('CASHFREE_SECRET_KEY_NEW') || Deno.env.get('CASHFREE_SECRET_KEY') || Deno.env.get('CASHFREE_SECRETE_KEY');
 
-    const verifyResponse = await fetch(`${CF_BASE_URL}/pg/orders/${cashfree_order_id}`, {
+let orderData: any = null;
+let lastStatus = 0;
+let lastText = '';
+for (const base of CF_BASE_URLS) {
+  try {
+    const res = await fetch(`${base}/pg/orders/${cashfree_order_id}`, {
       method: 'GET',
       headers: {
         'x-client-id': cashfreeAppId,
@@ -98,12 +104,23 @@ serve(async (req) => {
         'x-api-version': '2023-08-01'
       }
     });
-
-    if (!verifyResponse.ok) {
-      throw new Error('Payment verification failed');
+    if (res.ok) {
+      orderData = await res.json();
+      console.log(`✅ Cashfree verify success via ${base}`, { status: orderData?.order_status });
+      break;
+    } else {
+      lastStatus = res.status;
+      lastText = await res.text();
+      console.warn(`⚠️ Cashfree verify failed via ${base}`, { status: res.status, body: lastText?.slice(0, 200) });
     }
+  } catch (e) {
+    console.warn(`⚠️ Cashfree verify error via ${base}`, e);
+  }
+}
 
-    const orderData = await verifyResponse.json();
+if (!orderData) {
+  throw new Error(`Payment verification failed (status: ${lastStatus})`);
+}
     
     if (orderData.order_status !== 'PAID') {
       console.log('❌ Payment status:', orderData.order_status);
@@ -125,6 +142,19 @@ serve(async (req) => {
     if (paymentUpdateError) {
       console.error('Payment update error:', paymentUpdateError);
       throw new Error('Failed to update payment record');
+    }
+
+    // If a contest was already linked for this payment, return success idempotently
+    if (paymentRecord.contest_id) {
+      console.log('ℹ️ Contest already created for this payment, returning existing contest_id', paymentRecord.contest_id);
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          message: 'Custom contest already created',
+          contest_id: paymentRecord.contest_id
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
     }
 
     // Prepare contest data - Convert to IST timezone

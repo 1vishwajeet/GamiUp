@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,55 @@ interface ContestJoinModalProps {
 export function ContestJoinModal({ contest, isOpen, onClose, userProfile, onJoinSuccess }: ContestJoinModalProps) {
   const [gameId, setGameId] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Check for payment redirect verification on component mount
+  useEffect(() => {
+    const verifyPaymentOnReturn = async () => {
+      try {
+        const orderId = localStorage.getItem('cf_contest_order_id');
+        const contestData = localStorage.getItem('cf_contest_data');
+        
+        if (orderId && contestData && isOpen) {
+          console.log('🔄 Verifying contest join payment after redirect...', { orderId });
+          
+          const parsedData = JSON.parse(contestData);
+          const { error } = await supabase.functions.invoke('verify-payment', {
+            body: {
+              cashfree_order_id: orderId,
+              contestId: parsedData.contestId,
+              gameId: parsedData.gameId
+            }
+          });
+
+          if (error) {
+            console.error('❌ Contest join verification failed:', error);
+            toast({
+              title: "Payment Verification Failed",
+              description: error.message || "Please contact support.",
+              variant: "destructive",
+            });
+          } else {
+            console.log('✅ Contest joined successfully after redirect');
+            toast({
+              title: "Contest Joined! 🎉",
+              description: "You have successfully joined the contest. Good luck!",
+            });
+            // Joined via post-redirect verification
+          }
+
+          // Clean up localStorage
+          localStorage.removeItem('cf_contest_order_id');
+          localStorage.removeItem('cf_contest_data');
+          onClose();
+        }
+      } catch (error: any) {
+        console.error('Error verifying contest join payment on return:', error);
+      }
+    };
+
+    verifyPaymentOnReturn();
+  }, [isOpen, onJoinSuccess, onClose]);
+  
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -50,10 +99,10 @@ export function ContestJoinModal({ contest, isOpen, onClose, userProfile, onJoin
 
     setIsProcessing(true);
     try {
-      // Ensure Razorpay script is loaded
-      if (!(window as any).Razorpay) {
+      // Ensure Cashfree Checkout is loaded
+      if (!(window as any).Cashfree) {
         const script = document.createElement('script');
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
         script.async = true;
         document.head.appendChild(script);
         
@@ -63,7 +112,12 @@ export function ContestJoinModal({ contest, isOpen, onClose, userProfile, onJoin
         });
       }
 
-      // Create Razorpay order
+      // First test debug function
+      console.log('🧪 Testing debug function first...');
+      const debugResponse = await supabase.functions.invoke('debug-cashfree');
+      console.log('🧪 Debug function response:', debugResponse);
+
+      // Create Cashfree order
       const { data, error } = await supabase.functions.invoke('create-payment-order', {
         body: {
           contestId: contest.id,
@@ -74,6 +128,38 @@ export function ContestJoinModal({ contest, isOpen, onClose, userProfile, onJoin
 
       if (error) throw error;
 
+      console.log('✅ create-payment-order response:', data);
+      if (data?.success === false) {
+        console.error('❌ Payment init error:', data);
+        toast({
+          title: 'Payment Setup Error',
+          description: typeof data.details === 'string' ? data.details : (data.details?.message || data.error || 'Payment could not be initiated.'),
+          variant: 'destructive',
+        });
+        setIsProcessing(false);
+        return;
+      }
+      const sessionId = (data?.payment_session_id ?? '').toString().trim();
+      console.log('🧪 payment_session_id length:', sessionId.length, 'preview:', sessionId.slice(0,8) + '...');
+      if (!sessionId) {
+        console.error('❌ Missing payment_session_id in response:', data);
+        toast({
+          title: 'Payment Setup Error',
+          description: 'Payment session not received. Please try again.',
+          variant: 'destructive',
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      // Store payment data for post-redirect verification
+      try {
+        localStorage.setItem('cf_contest_order_id', data.order_id);
+        localStorage.setItem('cf_contest_data', JSON.stringify({ contestId: contest.id, gameId: gameId.trim() }));
+      } catch (e) {
+        console.warn('Could not store payment data in localStorage:', e);
+      }
+
       // Close the parent modal completely to avoid backdrop conflicts
       onClose();
       setIsProcessing(false);
@@ -81,74 +167,43 @@ export function ContestJoinModal({ contest, isOpen, onClose, userProfile, onJoin
       // Wait a bit for modal to close completely
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Open Razorpay checkout with enhanced options
-      const options = {
-        key: data.razorpay_key_id,
-        amount: data.amount,
-        currency: data.currency,
-        name: "GamiZN",
-        description: `Entry fee for ${contest.title}`,
-        order_id: data.order_id,
-        handler: function (response: any) {
-          // Payment successful - verify payment
-          verifyPayment(response, data.order_id);
-        },
-        prefill: {
-          name: userProfile.name,
-          email: userProfile.email,
-          contact: userProfile.whatsapp_number
-        },
-        theme: {
-          color: "#9333ea"
-        },
-        modal: {
-          ondismiss: function() {
-            // Do nothing on dismiss since parent modal is already closed
-          },
-          escape: true,
-          animation: true,
-          confirm_close: false
-        },
-        config: {
-          display: {
-            blocks: {
-              banks: {
-                name: 'Most Used Methods',
-                instruments: [
-                  {
-                    method: 'upi'
-                  },
-                  {
-                    method: 'card'
-                  },
-                  {
-                    method: 'netbanking'
-                  }
-                ]
-              }
-            },
-            sequence: ['block.banks'],
-            preferences: {
-              show_default_blocks: true
-            }
-          }
-        }
+
+      // Initialize Cashfree Checkout
+      const cashfree = (window as any).Cashfree({
+        mode: "production"
+      });
+
+      // Open Cashfree checkout
+      const checkoutOptions = {
+        paymentSessionId: sessionId,
+        redirectTarget: "_self" // or "_blank" for new tab
       };
 
-      const razorpay = new (window as any).Razorpay(options);
-      
-      // Add event listeners for better handling
-      razorpay.on('payment.failed', function (response: any) {
-        console.error('Payment failed:', response.error);
+      cashfree.checkout(checkoutOptions).then(function(result: any) {
+        if (result.error) {
+          console.error('Cashfree error:', result.error);
+          toast({
+            title: "Payment Failed",
+            description: result.error.message || "Payment failed. Please try again.",
+            variant: "destructive",
+          });
+        }
+        if (result.redirect) {
+          console.log("Redirecting to payment page...");
+        }
+        if (result.paymentDetails) {
+          console.log("Payment completed:", result.paymentDetails);
+          // Payment successful - verify payment
+          verifyPayment(result.paymentDetails, data.order_id);
+        }
+      }).catch(function(error: any) {
+        console.error('Cashfree checkout error:', error);
         toast({
           title: "Payment Failed",
-          description: response.error.description || "Payment failed. Please try again.",
+          description: "Failed to open payment gateway. Please try again.",
           variant: "destructive",
         });
       });
-
-      // Open Razorpay immediately
-      razorpay.open();
       
     } catch (error: any) {
       console.error('Payment initiation error:', error);
@@ -161,13 +216,11 @@ export function ContestJoinModal({ contest, isOpen, onClose, userProfile, onJoin
     }
   };
 
-  const verifyPayment = async (response: any, orderId: string) => {
+  const verifyPayment = async (paymentDetails: any, orderId: string) => {
     try {
       const { error } = await supabase.functions.invoke('verify-payment', {
         body: {
-          razorpay_payment_id: response.razorpay_payment_id,
-          razorpay_order_id: response.razorpay_order_id,
-          razorpay_signature: response.razorpay_signature,
+          cashfree_order_id: orderId,
           contestId: contest.id,
           gameId: gameId.trim()
         }

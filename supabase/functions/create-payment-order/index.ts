@@ -2,6 +2,14 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
+const CF_BASE_URL = (() => {
+  const env = (Deno.env.get('CASHFREE_ENV') || 'live').toLowerCase();
+  const isProduction = env === 'live' || env === 'prod' || env === 'production';
+  const baseUrl = isProduction ? 'https://api.cashfree.com' : 'https://sandbox.cashfree.com';
+  console.log(`🚀 Cashfree Environment: ${env}, Is Production: ${isProduction}, Base URL: ${baseUrl}`);
+  return baseUrl;
+})();
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -13,7 +21,7 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Function started');
+    console.log('Function SANDBOX-TEST started');
     
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -46,6 +54,13 @@ serve(async (req) => {
     const { contestId, amount, gameId } = await req.json();
     console.log('Request data:', { contestId, amount, gameId });
 
+    // Get user profile for phone number
+    const { data: userProfile } = await supabaseClient
+      .from('profiles')
+      .select('whatsapp_number')
+      .eq('user_id', user.id)
+      .single();
+
     // Validate input
     if (!contestId || !amount || !gameId) {
       console.error('Missing fields:', { contestId: !!contestId, amount: !!amount, gameId: !!gameId });
@@ -64,55 +79,98 @@ serve(async (req) => {
       throw new Error('You have already joined this contest');
     }
 
-    // Validate Razorpay credentials
-    const razorpayKeyId = Deno.env.get('RAZORPAY_KEY_ID');
-    const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
+    // Validate Cashfree credentials - check all possible secret names
+    let cashfreeAppId = Deno.env.get('CASHFREE_APP_ID_NEW') || Deno.env.get('CASHFREE_APP_ID');
+    let cashfreeSecretKey = Deno.env.get('CASHFREE_SECRET_KEY_NEW') || Deno.env.get('CASHFREE_SECRET_KEY') || Deno.env.get('CASHFREE_SECRETE_KEY');
     
-    if (!razorpayKeyId || !razorpayKeySecret) {
-      console.error('Missing Razorpay credentials');
-      throw new Error('Payment service not configured properly');
+    console.log('🔑 Cashfree credentials check FINAL-v5:', {
+      appId: cashfreeAppId ? `${cashfreeAppId.substring(0, 8)}...` : 'MISSING',
+      secretKey: cashfreeSecretKey ? `${cashfreeSecretKey.substring(0, 8)}...` : 'MISSING',
+      environment: Deno.env.get('CASHFREE_ENV'),
+      allEnvKeys: Object.keys(Deno.env.toObject()).filter(key => key.includes('CASHFREE')),
+      testNewSecrets: {
+        newAppId: !!Deno.env.get('CASHFREE_APP_ID_NEW'),
+        newSecretKey: !!Deno.env.get('CASHFREE_SECRET_KEY_NEW')
+      }
+    });
+    
+    if (!cashfreeAppId || !cashfreeSecretKey) {
+      console.error('❌ Missing Cashfree credentials');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Payment service not configured properly - missing credentials' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
     }
 
-    // Create Razorpay order with a shorter receipt ID (max 40 chars)
-    const timestamp = Date.now().toString().slice(-8); // Last 8 digits of timestamp
-    const userIdShort = user.id.slice(-8); // Last 8 chars of user ID
-    const contestIdShort = contestId.slice(-8); // Last 8 chars of contest ID
+    // Create Cashfree order
+    const timestamp = Date.now().toString().slice(-8);
+    const userIdShort = user.id.slice(-8);
+    const contestIdShort = contestId.slice(-8);
     
     const orderData = {
-      amount: Math.round(amount * 100), // Convert to paise
-      currency: 'INR',
-      receipt: `c${contestIdShort}u${userIdShort}t${timestamp}`, // Max 40 chars
+      order_amount: amount,
+      order_currency: 'INR',
+      order_id: `contest_${contestIdShort}_${userIdShort}_${timestamp}`,
+      customer_details: {
+        customer_id: user.id,
+        customer_email: user.email || 'user@example.com',
+        customer_phone: userProfile?.whatsapp_number ? 
+          (userProfile.whatsapp_number.startsWith('+91') ? userProfile.whatsapp_number.slice(3) : userProfile.whatsapp_number) : 
+          '9999999999'
+      },
+      order_meta: {
+        return_url: `https://www.gamizn.in/gamer-place?payment=success`,
+        notify_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/verify-payment`
+      },
+      order_note: `Contest ${contestId} payment by ${user.id}`
     };
 
-    console.log('Creating Razorpay order:', orderData);
+    console.log('📝 Creating Cashfree order:', JSON.stringify(orderData, null, 2));
+    console.log('🌐 Making request to:', `${CF_BASE_URL}/pg/orders`);
 
-    const razorpayResponse = await fetch('https://api.razorpay.com/v1/orders', {
+    const cashfreeResponse = await fetch(`${CF_BASE_URL}/pg/orders`, {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${btoa(`${razorpayKeyId}:${razorpayKeySecret}`)}`,
+        'x-client-id': cashfreeAppId,
+        'x-client-secret': cashfreeSecretKey,
         'Content-Type': 'application/json',
+        'x-api-version': '2023-08-01'
       },
       body: JSON.stringify(orderData),
     });
 
-    console.log('Razorpay response status:', razorpayResponse.status);
+    console.log('📡 Cashfree response status:', cashfreeResponse.status);
+    console.log('📡 Cashfree response headers:', Object.fromEntries(cashfreeResponse.headers.entries()));
     
-    if (!razorpayResponse.ok) {
-      const errorData = await razorpayResponse.text();
-      console.error('Razorpay API Error Status:', razorpayResponse.status);
-      console.error('Razorpay API Error Response:', errorData);
-      
-      // Parse error response for better error messages
-      try {
-        const errorJson = JSON.parse(errorData);
-        throw new Error(errorJson.error?.description || `Razorpay API Error: ${razorpayResponse.status}`);
-      } catch (parseError) {
-        throw new Error(`Payment service error: ${razorpayResponse.status} - ${errorData}`);
-      }
+    if (!cashfreeResponse.ok) {
+      const errorData = await cashfreeResponse.text();
+      console.error('❌ Cashfree API Error Status:', cashfreeResponse.status);
+      console.error('❌ Cashfree API Error Response:', errorData);
+      console.error('❌ Request URL:', `${CF_BASE_URL}/pg/orders`);
+      console.error('❌ Request body:', JSON.stringify(orderData, null, 2));
+      console.error('❌ Request headers:', {
+        'x-client-id': cashfreeAppId,
+        'x-client-secret': cashfreeSecretKey ? `${cashfreeSecretKey.substring(0, 8)}...` : 'MISSING',
+        'x-api-version': '2023-08-01'
+      });
+
+      let parsed: any = null;
+      try { parsed = JSON.parse(errorData); } catch {}
+
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Payment service error',
+          details: parsed || errorData,
+          status: cashfreeResponse.status,
+          cashfree_error: true
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
     }
 
-    const order = await razorpayResponse.json();
-    console.log('Razorpay order created:', order.id);
+    const order = await cashfreeResponse.json();
+    console.log('Cashfree order created:', order.order_id);
 
     // Store payment record
     const { error: paymentError } = await supabaseClient
@@ -120,7 +178,7 @@ serve(async (req) => {
       .insert({
         user_id: user.id,
         contest_id: contestId,
-        razorpay_order_id: order.id,
+        cashfree_order_id: order.order_id,
         amount: amount,
         status: 'pending'
       });
@@ -134,10 +192,12 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        order_id: order.id,
-        amount: order.amount,
-        currency: order.currency,
-        razorpay_key_id: Deno.env.get('RAZORPAY_KEY_ID'),
+        success: true,
+        order_id: order.order_id,
+        payment_session_id: order.payment_session_id,
+        amount: order.order_amount,
+        currency: order.order_currency,
+        cashfree_app_id: cashfreeAppId,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -145,12 +205,24 @@ serve(async (req) => {
       }
     );
   } catch (error: any) {
-    console.error('Error:', error);
+    console.error('❌ Error in create-payment-order:', error);
+    
+    // More detailed error logging
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        success: false,
+        error: error.message || 'Internal server error',
+        timestamp: new Date().toISOString()
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        status: 200,
       }
     );
   }

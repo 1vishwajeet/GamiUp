@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -52,6 +52,52 @@ const CreateCustomChallengeSection = () => {
     endTime: ""
   });
 
+  // Check for payment redirect verification on component mount
+  useEffect(() => {
+    const verifyPaymentOnReturn = async () => {
+      try {
+        const orderId = localStorage.getItem('cf_custom_order_id');
+        const challengeData = localStorage.getItem('cf_custom_challenge_data');
+        
+        if (orderId && challengeData) {
+          console.log('🔄 Verifying custom contest payment after redirect...', { orderId });
+          
+          const { error } = await supabase.functions.invoke('verify-custom-contest-payment', {
+            body: {
+              cashfree_order_id: orderId,
+              challengeData: JSON.parse(challengeData)
+            }
+          });
+
+          if (error) {
+            console.error('❌ Payment verification failed:', error);
+            toast({
+              title: "Payment Verification Failed",
+              description: error.message || "Please contact support.",
+              variant: "destructive",
+            });
+          } else {
+            console.log('✅ Custom contest created successfully after redirect');
+            toast({
+              title: "Challenge Created! 🎉",
+              description: "Your custom challenge has been created and is now live!",
+            });
+          }
+
+          // Clean up localStorage
+          localStorage.removeItem('cf_custom_order_id');
+          localStorage.removeItem('cf_custom_challenge_data');
+        }
+      } catch (error: any) {
+        console.error('Error verifying payment on return:', error);
+      }
+    };
+
+    if (user) {
+      verifyPaymentOnReturn();
+    }
+  }, [user, toast]);
+
   const gameOptions = [
     { value: "BGMI", label: "BGMI" },
     { value: "FREEFIRE", label: "Free Fire" }
@@ -64,6 +110,53 @@ const CreateCustomChallengeSection = () => {
     { value: "4v4", label: "4v4" }
   ];
 
+  // Handle post-redirect verification from Cashfree
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('payment') === 'success') {
+      const orderId = localStorage.getItem('cf_cashfree_order_id');
+      const stored = localStorage.getItem('cf_custom_challenge_data');
+      if (orderId && stored) {
+        const parsed: CreateCustomChallengeFormData = JSON.parse(stored);
+        setIsLoading(true);
+        supabase.functions
+          .invoke('verify-custom-contest-payment', {
+            body: {
+              cashfree_order_id: orderId,
+              challengeData: parsed,
+            },
+          })
+          .then(({ error }) => {
+            if (error) {
+              console.error('Post-redirect verification error:', error);
+              toast({
+                title: 'Payment Error',
+                description: error.message || 'Failed to verify payment. Please contact support.',
+                variant: 'destructive',
+              });
+            } else {
+              toast({
+                title: 'Challenge Created! 🎉',
+                description: 'Your custom challenge has been created and is now live!',
+              });
+              setIsOpen(false);
+            }
+          })
+          .finally(() => {
+            try {
+              localStorage.removeItem('cf_cashfree_order_id');
+              localStorage.removeItem('cf_custom_challenge_data');
+            } catch (_) {}
+            const url = new URL(window.location.href);
+            url.searchParams.delete('payment');
+            window.history.replaceState({}, '', url.toString());
+            setIsLoading(false);
+          });
+      }
+    }
+  }, []);
+
+
   const handleInputChange = (field: keyof CreateCustomChallengeFormData, value: string | number) => {
     setFormData(prev => ({
       ...prev,
@@ -73,8 +166,8 @@ const CreateCustomChallengeSection = () => {
     // Auto-calculate prize amount when entry fee changes
     if (field === 'entryFee') {
       const fee = Number(value);
-      // Prize pool = 2 players * entry fee - small platform fee (2%)
-      const prizePool = (2 * fee) * 0.98;
+      // Prize pool = 2 players * entry fee - small platform fee (10%)
+      const prizePool = (2 * fee) * 0.9;
       setFormData(prev => ({
         ...prev,
         prizeAmount: Math.round(prizePool)
@@ -193,24 +286,64 @@ const CreateCustomChallengeSection = () => {
         throw new Error(orderError.message);
       }
 
-      // Initialize Razorpay payment
-      const options = {
-        key: orderData.razorpay_key_id || 'rzp_live_1DP5mmOlF5G5ag',
-        amount: formData.entryFee * 100, // Razorpay expects amount in paise
-        currency: 'INR',
-        name: 'GamiZN',
-        description: `Create Custom Challenge: ${formData.title}`,
-        order_id: orderData.razorpay_order_id,
-        handler: async function (response: any) {
+      // Persist order and form data for post-redirect verification
+      try {
+        localStorage.setItem('cf_cashfree_order_id', orderData.cashfree_order_id);
+        localStorage.setItem('cf_custom_challenge_data', JSON.stringify(formData));
+      } catch (_) {}
+
+      // Ensure Cashfree Checkout is loaded
+      if (!(window as any).Cashfree) {
+        const script = document.createElement('script');
+        script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
+        script.async = true;
+        document.head.appendChild(script);
+        
+        await new Promise((resolve, reject) => {
+          script.onload = resolve;
+          script.onerror = reject;
+        });
+      }
+
+      // Initialize Cashfree Checkout
+      const cashfree = (window as any).Cashfree({
+        mode: "sandbox" // Change to "production" for live
+      });
+
+      // Store payment data for post-redirect verification
+      try {
+        localStorage.setItem('cf_custom_order_id', orderData.cashfree_order_id);
+        localStorage.setItem('cf_custom_challenge_data', JSON.stringify(formData));
+      } catch (e) {
+        console.warn('Could not store payment data in localStorage:', e);
+      }
+
+      // Open Cashfree checkout
+      const checkoutOptions = {
+        paymentSessionId: orderData.payment_session_id,
+        redirectTarget: "_self"
+      };
+
+      cashfree.checkout(checkoutOptions).then(async function(result: any) {
+        if (result.error) {
+          console.error('Cashfree error:', result.error);
+          toast({
+            title: "Payment Failed",
+            description: result.error.message || "Payment failed. Please try again.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+        
+        if (result.paymentDetails) {
           try {
             // Verify payment and create contest
             const { error: verifyError } = await supabase.functions.invoke(
               'verify-custom-contest-payment',
               {
                 body: {
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_signature: response.razorpay_signature,
+                  cashfree_order_id: orderData.cashfree_order_id,
                   challengeData: formData
                 }
               }
@@ -222,7 +355,7 @@ const CreateCustomChallengeSection = () => {
 
             toast({
               title: "Challenge Created! 🎉",
-              description: "Your custom challenge has been created and is now live! ~ After Opponent Joining, Your Room Access Info Will Be Availbale In Your DM",
+              description: "Your custom challenge has been created and is now live!",
             });
 
             // Reset form and close modal
@@ -248,24 +381,17 @@ const CreateCustomChallengeSection = () => {
               variant: "destructive",
             });
           }
-        },
-        prefill: {
-          name: userProfile.name,
-          email: userProfile.email,
-          contact: userProfile.whatsapp_number
-        },
-        theme: {
-          color: '#8B5CF6'
-        },
-        modal: {
-          ondismiss: function() {
-            setIsLoading(false);
-          }
         }
-      };
-
-      const razorpay = new (window as any).Razorpay(options);
-      razorpay.open();
+      }).catch(function(error: any) {
+        console.error('Cashfree checkout error:', error);
+        toast({
+          title: "Payment Failed",
+          description: "Failed to open payment gateway. Please try again.",
+          variant: "destructive",
+        });
+      }).finally(() => {
+        setIsLoading(false);
+      });
 
     } catch (error: any) {
       console.error('Error creating challenge:', error);
@@ -408,7 +534,7 @@ const CreateCustomChallengeSection = () => {
                       readOnly
                       className="bg-white/5 border-white/10 text-white/70 cursor-not-allowed"
                     />
-                    <p className="text-xs text-white/50 mt-1">Auto-calculated: 98% of total entry fees</p>
+                    <p className="text-xs text-white/50 mt-1">Auto-calculated: 90% of total entry fees</p>
                   </div>
 
                   {/* Timing */}
@@ -469,7 +595,7 @@ const CreateCustomChallengeSection = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                   <div className="text-center">
                     <p className="text-white/70">Max Participants</p>
-                    <p className="text-gaming-cyan font-bold">2 Players (1v1) / 2 Teams(2v2 or 3v3 or 4v4)</p>
+                    <p className="text-gaming-cyan font-bold">2 Players</p>
                   </div>
                   <div className="text-center">
                     <p className="text-white/70">Entry Fee Each</p>

@@ -39,6 +39,50 @@ const LiveChallengesSection = () => {
       handleSharedContest(contestId);
     }
 
+    // Handle post-redirect verification for contest joining
+    const paymentParam = urlParams.get('payment');
+    if (paymentParam === 'success') {
+      const joinOrderId = localStorage.getItem('cf_join_order_id');
+      const joinCtxRaw = localStorage.getItem('cf_join_ctx');
+      if (joinOrderId && joinCtxRaw) {
+        const joinCtx = JSON.parse(joinCtxRaw);
+        supabase.functions
+          .invoke('verify-payment', {
+            body: {
+              cashfree_order_id: joinOrderId,
+              contestId: joinCtx.contestId,
+              gameId: joinCtx.gameId,
+            },
+          })
+          .then(({ error }) => {
+            if (error) {
+              console.error('Join post-redirect verification error:', error);
+              toast({
+                title: 'Payment Verification Failed',
+                description: error.message || 'Could not confirm your payment. Please contact support.',
+                variant: 'destructive',
+              });
+            } else {
+              toast({
+                title: '🎉 Contest Joined Successfully!',
+                description: 'Payment confirmed and you have joined the contest.',
+              });
+              if (user) fetchUserJoinedContests();
+            }
+          })
+          .finally(() => {
+            try {
+              localStorage.removeItem('cf_join_order_id');
+              localStorage.removeItem('cf_join_ctx');
+            } catch (_) {}
+            const url = new URL(window.location.href);
+            url.searchParams.delete('payment');
+            window.history.replaceState({}, '', url.toString());
+          });
+      }
+    }
+
+
     // Set up real-time subscription for contest changes
     const channel = supabase
       .channel('gamer-place-contest-changes')
@@ -470,22 +514,22 @@ const LiveChallengesSection = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-  <TabsList className="flex w-full mx-auto mb-8 bg-gradient-to-r from-purple-900/30 via-blue-900/30 to-purple-900/30 backdrop-blur-md border border-purple-500/30 rounded-2xl p-2 shadow-2xl shadow-purple-500/20 gap-2">
-    <TabsTrigger 
-      value="gamizn" 
-      className="flex-1 relative overflow-hidden rounded-xl px-4 py-3 font-gaming font-bold text-xs sm:text-sm transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-gaming-purple data-[state=active]:to-gaming-blue data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-gaming-purple/50 text-white/60 hover:text-white/80 hover:bg-white/5 data-[state=active]:scale-105"
-    >
-      <span className="relative z-10 text-nowrap">🏆GAMIZN CONTESTS</span>
-      <div className="absolute inset-0 bg-gradient-to-r from-gaming-purple/20 to-gaming-blue/20 opacity-0 data-[state=active]:opacity-100 transition-opacity duration-300" />
-    </TabsTrigger>
-    <TabsTrigger 
-      value="custom" 
-      className="flex-1 relative overflow-hidden rounded-xl px-4 py-3 font-gaming font-bold text-xs sm:text-sm transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-gaming-orange data-[state=active]:to-gaming-cyan data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-gaming-orange/50 text-white/60 hover:text-white/80 hover:bg-white/5 data-[state=active]:scale-105"
-    >
-      <span className="relative z-10 text-nowrap">⚔️CUSTOM CONTESTS</span>
-      <div className="absolute inset-0 bg-gradient-to-r from-gaming-orange/20 to-gaming-cyan/20 opacity-0 data-[state=active]:opacity-100 transition-opacity duration-300" />
-    </TabsTrigger>
-  </TabsList>
+        <TabsList className="grid w-full grid-cols-2 max-w-lg mx-auto mb-8 bg-gradient-to-r from-purple-900/30 via-blue-900/30 to-purple-900/30 backdrop-blur-md border border-purple-500/30 rounded-2xl p-2 shadow-2xl shadow-purple-500/20">
+          <TabsTrigger 
+            value="gamizn" 
+            className="relative overflow-hidden rounded-xl px-6 py-3 font-gaming font-bold text-sm transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-gaming-purple data-[state=active]:to-gaming-blue data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-gaming-purple/50 text-white/60 hover:text-white/80 hover:bg-white/5 data-[state=active]:scale-105"
+          >
+            <span className="relative z-10">🏆 GAMIZN CONTESTS</span>
+            <div className="absolute inset-0 bg-gradient-to-r from-gaming-purple/20 to-gaming-blue/20 opacity-0 data-[state=active]:opacity-100 transition-opacity duration-300" />
+          </TabsTrigger>
+          <TabsTrigger 
+            value="custom" 
+            className="relative overflow-hidden rounded-xl px-6 py-3 font-gaming font-bold text-sm transition-all duration-300 data-[state=active]:bg-gradient-to-r data-[state=active]:from-gaming-orange data-[state=active]:to-gaming-cyan data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-gaming-orange/50 text-white/60 hover:text-white/80 hover:bg-white/5 data-[state=active]:scale-105"
+          >
+            <span className="relative z-10">⚔️ CUSTOM CHALLENGES</span>
+            <div className="absolute inset-0 bg-gradient-to-r from-gaming-orange/20 to-gaming-cyan/20 opacity-0 data-[state=active]:opacity-100 transition-opacity duration-300" />
+          </TabsTrigger>
+        </TabsList>
 
         <TabsContent value="gamizn" className="mt-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

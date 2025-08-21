@@ -1,6 +1,14 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
+const CF_BASE_URL = (() => {
+  const env = (Deno.env.get('CASHFREE_ENV') || 'sandbox').toLowerCase();
+  const isProduction = env === 'live' || env === 'prod' || env === 'production';
+  const baseUrl = isProduction ? 'https://api.cashfree.com' : 'https://sandbox.cashfree.com';
+  console.log(`🚀 Cashfree Environment: ${env}, Is Production: ${isProduction}, Base URL: ${baseUrl}`);
+  return baseUrl;
+})();
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -10,6 +18,8 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  console.log('🔍 Verify custom contest payment function called');
 
   try {
     const authHeader = req.headers.get('Authorization');
@@ -34,13 +44,17 @@ serve(async (req) => {
     }
 
     const {
-      razorpay_payment_id,
-      razorpay_order_id,
-      razorpay_signature,
+      cashfree_order_id,
       challengeData
     } = await req.json();
 
-    if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature || !challengeData) {
+    console.log('📝 Verification request data:', {
+      cashfree_order_id,
+      challengeDataTitle: challengeData?.title,
+      userId: user.id
+    });
+
+    if (!cashfree_order_id || !challengeData) {
       throw new Error('Missing required payment or challenge data');
     }
 
@@ -48,7 +62,7 @@ serve(async (req) => {
     const { data: paymentRecord, error: paymentError } = await supabaseClient
       .from('custom_contest_payments')
       .select('user_id, amount')
-      .eq('razorpay_order_id', razorpay_order_id)
+      .eq('cashfree_order_id', cashfree_order_id)
       .eq('user_id', user.id)
       .single();
 
@@ -56,34 +70,40 @@ serve(async (req) => {
       throw new Error('Payment record not found');
     }
 
-    // Verify Razorpay signature using Web Crypto API
-    const keyData = new TextEncoder().encode(Deno.env.get('RAZORPAY_TEST_KEY_SECRET') || '');
-    const key = await crypto.subtle.importKey(
-      'raw',
-      keyData,
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['sign']
-    );
-    
-    const dataToSign = new TextEncoder().encode(`${razorpay_order_id}|${razorpay_payment_id}`);
-    const signature = await crypto.subtle.sign('HMAC', key, dataToSign);
-    const generatedSignature = Array.from(new Uint8Array(signature))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
+    // Verify payment with Cashfree - use same secret names as create function
+    const cashfreeAppId = Deno.env.get('CASHFREE_APP_ID_NEW') || Deno.env.get('CASHFREE_APP_ID');
+    const cashfreeSecretKey = Deno.env.get('CASHFREE_SECRET_KEY_NEW') || Deno.env.get('CASHFREE_SECRET_KEY') || Deno.env.get('CASHFREE_SECRETE_KEY');
 
-    if (generatedSignature !== razorpay_signature) {
-      throw new Error('Payment signature verification failed');
+    const verifyResponse = await fetch(`${CF_BASE_URL}/pg/orders/${cashfree_order_id}`, {
+      method: 'GET',
+      headers: {
+        'x-client-id': cashfreeAppId,
+        'x-client-secret': cashfreeSecretKey,
+        'x-api-version': '2023-08-01'
+      }
+    });
+
+    if (!verifyResponse.ok) {
+      throw new Error('Payment verification failed');
     }
+
+    const orderData = await verifyResponse.json();
+    
+    if (orderData.order_status !== 'PAID') {
+      console.log('❌ Payment status:', orderData.order_status);
+      throw new Error('Payment not completed');
+    }
+
+    console.log('✅ Payment verified successfully:', orderData.order_status);
 
     // Update payment record
     const { error: paymentUpdateError } = await supabaseClient
       .from('custom_contest_payments')
       .update({
-        razorpay_payment_id,
+        cashfree_payment_id: orderData.cf_order_id,
         status: 'completed'
       })
-      .eq('razorpay_order_id', razorpay_order_id)
+      .eq('cashfree_order_id', cashfree_order_id)
       .eq('user_id', user.id);
 
     if (paymentUpdateError) {
@@ -126,7 +146,7 @@ serve(async (req) => {
     const { error: linkError } = await supabaseClient
       .from('custom_contest_payments')
       .update({ contest_id: contestData.id })
-      .eq('razorpay_order_id', razorpay_order_id)
+      .eq('cashfree_order_id', cashfree_order_id)
       .eq('user_id', user.id);
 
     if (linkError) {
@@ -140,9 +160,9 @@ serve(async (req) => {
         user_id: user.id,
         contest_id: contestData.id,
         game_id: challengeData.challengeType,
-        payment_id: razorpay_payment_id,
+        payment_id: orderData.cf_order_id,
         payment_status: 'completed',
-        transaction_id: razorpay_order_id,
+        transaction_id: cashfree_order_id,
         joined_at: new Date().toISOString()
       });
 
@@ -155,7 +175,7 @@ serve(async (req) => {
       contestId: contestData.id,
       title: challengeData.title,
       createdBy: user.id,
-      paymentId: razorpay_payment_id
+      paymentId: orderData.cf_order_id
     });
 
     return new Response(

@@ -22,26 +22,10 @@ serve(async (req) => {
   console.log('🔍 Verify custom contest payment function called');
 
   try {
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('No authorization header');
-    }
-
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: authHeader },
-        },
-      }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
-
-    // Get authenticated user
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-    if (userError || !user) {
-      throw new Error('User not authenticated');
-    }
 
     const {
       cashfree_order_id,
@@ -50,8 +34,7 @@ serve(async (req) => {
 
     console.log('📝 Verification request data:', {
       cashfree_order_id,
-      challengeDataTitle: challengeData?.title,
-      userId: user.id
+      challengeDataTitle: challengeData?.title
     });
 
     if (!cashfree_order_id || !challengeData) {
@@ -63,12 +46,13 @@ serve(async (req) => {
       .from('custom_contest_payments')
       .select('user_id, amount')
       .eq('cashfree_order_id', cashfree_order_id)
-      .eq('user_id', user.id)
       .single();
 
     if (paymentError || !paymentRecord) {
       throw new Error('Payment record not found');
     }
+
+    const userId = paymentRecord.user_id;
 
     // Verify payment with Cashfree - use same secret names as create function
     const cashfreeAppId = Deno.env.get('CASHFREE_APP_ID_NEW') || Deno.env.get('CASHFREE_APP_ID');
@@ -104,7 +88,7 @@ serve(async (req) => {
         status: 'completed'
       })
       .eq('cashfree_order_id', cashfree_order_id)
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (paymentUpdateError) {
       console.error('Payment update error:', paymentUpdateError);
@@ -131,7 +115,7 @@ serve(async (req) => {
         start_date: startDateTime.toISOString(),
         end_date: endDateTime.toISOString(),
         status: 'upcoming',
-        created_by: user.id,
+        created_by: userId,
         image_url: null
       })
       .select()
@@ -147,7 +131,7 @@ serve(async (req) => {
       .from('custom_contest_payments')
       .update({ contest_id: contestData.id })
       .eq('cashfree_order_id', cashfree_order_id)
-      .eq('user_id', user.id);
+      .eq('user_id', userId);
 
     if (linkError) {
       console.error('Failed to link payment to contest:', linkError);
@@ -157,7 +141,7 @@ serve(async (req) => {
     const { error: participantError } = await supabaseClient
       .from('contest_participants')
       .insert({
-        user_id: user.id,
+        user_id: userId,
         contest_id: contestData.id,
         game_id: challengeData.challengeType,
         payment_id: orderData.cf_order_id,
@@ -174,7 +158,7 @@ serve(async (req) => {
     console.log('Custom contest created successfully:', {
       contestId: contestData.id,
       title: challengeData.title,
-      createdBy: user.id,
+      createdBy: userId,
       paymentId: orderData.cf_order_id
     });
 

@@ -118,10 +118,10 @@ serve(async (req) => {
           (userProfile.whatsapp_number.startsWith('+91') ? userProfile.whatsapp_number.slice(3) : userProfile.whatsapp_number) : 
           '9999999999'
       },
-      order_meta: {
-        return_url: `https://www.gamizn.com/gamer-place?payment=success`,
-        notify_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/verify-payment`
-      },
+        order_meta: {
+          return_url: `https://www.gamizn.com/gamer-place?payment=success`,
+          notify_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/verify-payment`
+        },
       order_note: `Contest ${contestId} payment by ${user.id}`
     };
 
